@@ -56,10 +56,10 @@
 
   let applications = []
   let numApplications = 0
-  let currentIndex = 0
+  let currentIndexDisplay = 0
 
-  function loadApplication(index) {
-    fields = serialize.fromServer(applications[index])
+  function loadApplication(indexDisplay) {
+    fields = serialize.fromServer(applications[indexDisplay - 1])
   }
 
   onMount(async () => {
@@ -74,8 +74,8 @@
     if (numApplications > 0) {
       // comment this out when changing what data the application uses
       // i.e., structure of fields
-      currentIndex = 0
-      loadApplication(0)
+      currentIndexDisplay = 1
+      loadApplication(1)
     }
   })
 </script>
@@ -86,9 +86,9 @@
     <button
       class="btn btn-primary"
       on:click={() => {
-        if (currentIndex > 0) {
-          currentIndex--
-          loadApplication(currentIndex)
+        if (currentIndexDisplay > 1) {
+          currentIndexDisplay--
+          loadApplication(currentIndexDisplay)
         }
       }}
     >
@@ -105,15 +105,32 @@
     </button>
 
     {#if numApplications > 0}
-      <span class="font-bold">{`${currentIndex + 1} / ${numApplications}`}</span>
+      <span class="font-bold">
+        <input
+          type="number"
+          bind:value={currentIndexDisplay}
+          min="1"
+          max={numApplications}
+          on:change={() => {
+            if (currentIndexDisplay > numApplications) {
+              currentIndexDisplay = numApplications
+            }
+            if (currentIndexDisplay < 1) {
+              currentIndexDisplay = 1
+            }
+            loadApplication(currentIndexDisplay)
+          }}
+        />
+        {`/ ${numApplications}`}</span
+      >
     {/if}
 
     <button
       class="btn btn-primary"
       on:click={() => {
-        if (currentIndex < applications.length - 1) {
-          currentIndex++
-          loadApplication(currentIndex)
+        if (currentIndexDisplay < applications.length) {
+          currentIndexDisplay++
+          loadApplication(currentIndexDisplay)
         }
       }}
     >
