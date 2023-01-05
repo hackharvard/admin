@@ -5,8 +5,8 @@
   "targets": {
     "hackharvard-core": {
       "hosting": {
-        "portal": [
-          "hackharvard-portal-2fed8"
+        "admin": [
+          "hackharvard-admin-2fed8"
         ]
       }
     }
