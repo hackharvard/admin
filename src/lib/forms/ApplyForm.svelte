@@ -54,8 +54,14 @@
     status: createFields.checkbox('approved', 'rejected', 'waitlisted')
   }
 
+  let applications = []
+  let uids = []
+  let numApplications = 0
+  let currentIndex = 0
+  let currentIndexDisplay = 1
+
   function handleSave() {
-    setDoc(doc($db, 'applications', uids[currentIndexDisplay - 1]), serialize.toServer(fields))
+    setDoc(doc($db, 'applications', uids[currentIndex]), serialize.toServer(fields))
       .then(() => {
         disabled = false
         alert.trigger('success', 'Application decision saved!')
@@ -66,13 +72,8 @@
       })
   }
 
-  let applications = []
-  let uids = []
-  let numApplications = 0
-  let currentIndexDisplay = 0
-
-  function loadApplication(indexDisplay) {
-    fields = applications[indexDisplay - 1]
+  function loadApplication(index) {
+    fields = applications[index]
   }
 
   onMount(async () => {
@@ -87,8 +88,8 @@
     if (numApplications > 0) {
       // comment this out when changing what data the application uses
       // i.e., structure of fields
-      currentIndexDisplay = 1
-      loadApplication(1)
+      currentIndex = 0
+      loadApplication(0)
     }
   })
 </script>
@@ -99,9 +100,10 @@
     <button
       class="btn btn-primary"
       on:click={() => {
-        if (currentIndexDisplay > 1) {
+        if (currentIndex > 0) {
+          currentIndex--
           currentIndexDisplay--
-          loadApplication(currentIndexDisplay)
+          loadApplication(currentIndex)
         }
       }}
     >
@@ -125,13 +127,16 @@
           min="1"
           max={numApplications}
           on:change={() => {
-            if (currentIndexDisplay > numApplications) {
+            currentIndex = currentIndexDisplay - 1
+            if (currentIndex > numApplications - 1) {
+              currentIndex = numApplications - 1
               currentIndexDisplay = numApplications
             }
-            if (currentIndexDisplay < 1) {
+            if (currentIndex < 0) {
+              currentIndex = 0
               currentIndexDisplay = 1
             }
-            loadApplication(currentIndexDisplay)
+            loadApplication(currentIndex)
           }}
         />
         {`/ ${numApplications}`}</span
@@ -141,9 +146,10 @@
     <button
       class="btn btn-primary"
       on:click={() => {
-        if (currentIndexDisplay < applications.length) {
+        if (currentIndex < applications.length - 1) {
+          currentIndex++
           currentIndexDisplay++
-          loadApplication(currentIndexDisplay)
+          loadApplication(currentIndex)
         }
       }}
     >
