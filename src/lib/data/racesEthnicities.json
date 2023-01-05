@@ -1,0 +1,10 @@
+[
+  { "name": "Native American or Alaska Native", "code": 0 },
+  { "name": "Asian", "code": 1 },
+  { "name": "Black or African American", "code": 2 },
+  { "name": "Hispanic or Latino or Spanish origin of any race", "code": 3 },
+  { "name": "Native Hawaiian or other Pacific Islander", "code": 4 },
+  { "name": "White", "code": 5 },
+  { "name": "Two or more races", "code": 6 },
+  { "name": "Prefer not to answer", "code": 7 }
+]

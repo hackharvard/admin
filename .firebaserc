@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "hackharvard-core"
+  },
+  "targets": {
+    "hackharvard-core": {
+      "hosting": {
+        "portal": [
+          "hackharvard-portal-2fed8"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
