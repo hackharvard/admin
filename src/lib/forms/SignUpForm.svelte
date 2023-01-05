@@ -70,7 +70,7 @@
                 ).then(() => {
                   setDoc(doc($db, 'users', $user.uid), {
                     hhid,
-                    role: 'applicant',
+                    role: 'pending-reviewer',
                     firstName,
                     lastName
                   }).then(() => {
