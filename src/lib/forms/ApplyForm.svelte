@@ -54,21 +54,34 @@
     status: createFields.checkbox('approved', 'rejected', 'waitlisted')
   }
 
+  function handleSave() {
+    setDoc(doc($db, 'applications', uids[currentIndexDisplay - 1]), serialize.toServer(fields))
+      .then(() => {
+        disabled = false
+        alert.trigger('success', 'Application decision saved!')
+      })
+      .catch(err => {
+        disabled = false
+        alert.trigger('error', err.code)
+      })
+  }
+
   let applications = []
+  let uids = []
   let numApplications = 0
   let currentIndexDisplay = 0
 
   function loadApplication(indexDisplay) {
-    fields = serialize.fromServer(applications[indexDisplay - 1])
+    fields = applications[indexDisplay - 1]
   }
 
   onMount(async () => {
     // get all applications
     const snapshot = await getDocs(collection($db, 'applications'))
     snapshot.forEach(doc => {
-      applications.push(doc.data())
+      applications.push(serialize.fromServer(doc.data()))
+      uids.push(doc.id)
     })
-
     numApplications = applications.length
 
     if (numApplications > 0) {
@@ -144,6 +157,68 @@
       >
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
       </svg>
+    </button>
+  </div>
+
+  <!-- display current decision -->
+  {#if fields.status.approved.value}
+    <div class="mb-3">
+      <span class="font-bold">Current Decision: </span>
+      <span class="text-green-500">Accepted</span>
+    </div>
+  {:else if fields.status.rejected.value}
+    <div class="mb-3">
+      <span class="font-bold">Current Decision: </span>
+      <span class="text-red-500">Rejected</span>
+    </div>
+  {:else if fields.status.waitlisted.value}
+    <div class="mb-3">
+      <span class="font-bold">Current Decision: </span>
+      <span class="text-blue-500">Waitlisted</span>
+    </div>
+  {:else}
+    <div class="mb-3">
+      <span class="font-bold">Current Decision: </span>
+      <span class="text-gray-500">Undecided</span>
+    </div>
+  {/if}
+
+  <!-- accept, reject, waitlist buttons -->
+  <div class="flex justify-between mb-3">
+    <button
+      class="btn btn-primary bg-lime-500  text-white p-2 rounded"
+      on:click={() => {
+        fields.status.approved.value = true
+        fields.status.rejected.value = false
+        fields.status.waitlisted.value = false
+        handleSave()
+      }}
+    >
+      Accept
+    </button>
+
+    <button
+      class="btn btn-primary bg-red-500  text-white p-2 rounded"
+      on:click={() => {
+        fields.status.approved.value = false
+        fields.status.rejected.value = true
+        fields.status.waitlisted.value = false
+        handleSave()
+      }}
+    >
+      Reject
+    </button>
+
+    <button
+      class="btn btn-primary bg-blue-500 text-white p-2 rounded"
+      on:click={() => {
+        fields.status.approved.value = false
+        fields.status.rejected.value = false
+        fields.status.waitlisted.value = true
+        handleSave()
+      }}
+    >
+      Waitlist
     </button>
   </div>
 
