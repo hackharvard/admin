@@ -13,8 +13,9 @@
       getDoc(doc($db, 'applications', $user.uid)).then(res => {
         if (res.exists()) {
           const application = res.data()
-          if (application.approved) {
-            data.application = 'Approved! We look forward to seeing you.'
+          if (application.accepted) {
+            data.application =
+              'You have been accepted to HackHarvard 2023! We look forward to seeing you.'
           } else {
             data.application = application.submitted ? 'Submitted and in review!' : 'In progress.'
           }
