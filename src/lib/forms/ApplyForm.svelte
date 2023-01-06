@@ -56,7 +56,6 @@
 
   let allApplications = []
   let applications = []
-  let uids = []
   let numApplications = 0
   let currentIndex = 0
   let currentIndexDisplay = 1
@@ -64,6 +63,7 @@
     suggestion: 'waitlist',
     reason: 'Not enough information to make a decision'
   }
+  let codeQuery = false
 
   function suggestApplicationDecision() {
     // isHarvardStudent || (18yearsOld && affiliatedWithUni && ((USapplicant && okEssayLength) || (internationalApplicant && goodEssayLength) ))
@@ -114,7 +114,7 @@
   }
 
   function handleSave() {
-    setDoc(doc($db, 'applications', uids[currentIndex]), serialize.toServer(fields))
+    setDoc(doc($db, 'applications', fields.meta.uid), serialize.toServer(fields))
       .then(() => {
         alert.trigger('success', 'Application decision saved!')
         // wait 0.5 seconds before loading next application
@@ -132,28 +132,76 @@
   }
 
   function searchForApplications(query) {
-    applications = allApplications.filter(application => {
-      return (
-        application.personal.firstName.value.toLowerCase().includes(query) ||
-        application.personal.lastName.value.toLowerCase().includes(query) ||
-        application.personal.email.value.toLowerCase().includes(query) ||
-        application.meta.hhid.value.toLowerCase().includes(query) ||
-        application.personal.phoneNumber.value.toLowerCase().includes(query) ||
-        application.personal.address.value.toLowerCase().includes(query) ||
-        application.personal.city.value.toLowerCase().includes(query) ||
-        application.personal.state.value.toLowerCase().includes(query) ||
-        application.personal.country.value.toLowerCase().includes(query) ||
-        application.personal.zipCode.value.toLowerCase().includes(query) ||
-        application.academic.currentSchool.value.toLowerCase().includes(query) ||
-        application.academic.graduationYear.value == parseInt(query, 10) ||
-        application.academic.major.value.toLowerCase().includes(query) ||
-        application.hackathon.shirtSize.value.toLowerCase().includes(query) ||
-        application.hackathon.reason.value.toLowerCase().includes(query) ||
-        application.hackathon.why.value.toLowerCase().includes(query) ||
-        application.hackathon.role.value.toLowerCase().includes(query) ||
-        application.hackathon.proud.value.toLowerCase().includes(query)
-      )
-    })
+    if (codeQuery) {
+      const queries = query.split('&&')
+      // remove whitespace
+      queries.forEach((q, index) => {
+        queries[index] = q.trim()
+      })
+
+      const queryComponents = []
+
+      queries.forEach(q => {
+        const components = q.split('=')
+        queryComponents.push({
+          key: components[0].trim(),
+          value: components[1].trim()
+        })
+      })
+      applications = allApplications.filter(application => {
+        let matches = true
+
+        queryComponents.forEach(component => {
+          const keys = component.key.split('.')
+          let value = application
+          keys.forEach(key => {
+            value = value[key]
+          })
+
+          let componentValue = component.value
+          if (!isNaN(componentValue)) {
+            componentValue = Number(componentValue)
+          }
+          if (componentValue === 'true') {
+            componentValue = true
+            value = value.checked
+          } else if (componentValue === 'false') {
+            componentValue = false
+            console.log(value)
+            value = value.checked
+          } else {
+            value = value.value
+          }
+
+          if (value !== componentValue) {
+            matches = false
+          }
+        })
+        return matches
+      })
+    } else {
+      query = query.toLowerCase()
+      applications = allApplications.filter(application => {
+        return (
+          application.personal.firstName.value.toLowerCase().includes(query) ||
+          application.personal.lastName.value.toLowerCase().includes(query) ||
+          application.personal.email.value.toLowerCase().includes(query) ||
+          application.meta.hhid.value.toLowerCase().includes(query) ||
+          application.personal.phoneNumber.value.toLowerCase().includes(query) ||
+          application.personal.address.value.toLowerCase().includes(query) ||
+          application.personal.city.value.toLowerCase().includes(query) ||
+          application.personal.state.value.toLowerCase().includes(query) ||
+          application.personal.country.value.toLowerCase().includes(query) ||
+          application.academic.currentSchool.value.toLowerCase().includes(query) ||
+          application.academic.graduationYear.value == parseInt(query, 10) ||
+          application.academic.major.value.toLowerCase().includes(query) ||
+          application.hackathon.reason.value.toLowerCase().includes(query) ||
+          application.hackathon.why.value.toLowerCase().includes(query) ||
+          application.hackathon.role.value.toLowerCase().includes(query) ||
+          application.hackathon.proud.value.toLowerCase().includes(query)
+        )
+      })
+    }
     numApplications = applications.length
     currentIndex = 0
     currentIndexDisplay = 1
@@ -175,7 +223,9 @@
       const application = serialize.fromServer(doc.data())
       applications.push(application)
       allApplications.push(application)
-      uids.push(doc.id)
+      if (application.meta.uid.value !== doc.id) {
+        alert.trigger('error', 'Application UID mismatch', false)
+      }
     })
     numApplications = applications.length
 
@@ -185,6 +235,14 @@
 </script>
 
 <div>
+  <!-- checkbox for code query -->
+  <div class="mb-3">
+    <label class="flex items-center">
+      <input type="checkbox" class="form-checkbox" bind:checked={codeQuery} />
+      <span class="ml-2">Code query</span>
+    </label>
+  </div>
+
   <!-- text box for search -->
   <div class="mb-10">
     <input
@@ -193,8 +251,7 @@
       placeholder="Search for applications"
       on:keydown={e => {
         if (e.key === 'Enter') {
-          const query = e.target.value.toLowerCase()
-          searchForApplications(query)
+          searchForApplications(e.target.value)
         }
       }}
     />
