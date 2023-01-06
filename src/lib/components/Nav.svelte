@@ -6,13 +6,25 @@
   import Brand from './Brand.svelte'
   import { navigating } from '$app/stores'
   import { fade } from 'svelte/transition'
-  import { user } from '$lib/firebase'
+  import { user, db } from '$lib/firebase'
   import AnnouncementsBell from './AnnouncementsBell.svelte'
+  import { getDoc, doc } from 'firebase/firestore'
 
   onMount(() => {
     updateShadow()
+    checkRole()
   })
 
+  async function checkRole() {
+    if ($user) {
+      const profileDoc = await getDoc(doc($db, 'users', $user.uid))
+      const profileDocData = profileDoc.data()
+      const role = profileDocData.role
+      if (role !== 'admin') {
+        window.location.href = 'https://portal.hackharvard.io'
+      }
+    }
+  }
   let shadow = false
   let open = false
   $: pathname = $page.url.pathname
