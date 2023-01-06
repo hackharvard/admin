@@ -58,57 +58,44 @@
   let numApplications = 0
   let currentIndex = 0
   let currentIndexDisplay = 1
-  let suggestedDecision = {
-    suggestion: 'waitlist',
-    reason: 'Not enough information to make a decision'
-  }
+  let suggestedDecision = 'waitlist'
   let codeQuery = false
 
-  function suggestApplicationDecision() {
-    // isHarvardStudent || (18yearsOld && affiliatedWithUni && ((USapplicant && okEssayLength) || (internationalApplicant && goodEssayLength) ))
-    const isHarvardStudent = fields.academic.currentSchool.value === 'Harvard University'
+  function getScore(application) {
+    const isHarvardStudent = application.academic.currentSchool.value === 'Harvard University'
     // 18 years old as of 10/20/2023
-    const is18YearsOld = new Date(fields.personal.dateOfBirth.value) < new Date('2023-10-20')
-    const isUSApplicant = fields.personal.country.value === 'United States'
-    const isMassachusettsApplicant = fields.personal.state.value === 'Massachusetts'
-    const essay1Length = fields.hackathon.why.value.length
-    const essay2Length = fields.hackathon.proud.value.length
-    const essay3Length = fields.hackathon.role.value.length
-    const averageEssayLength = (essay1Length + essay2Length + essay3Length) / 3
-    const fineEssayLength = averageEssayLength >= 100
-    const isGoodEssayLength = averageEssayLength >= 200
-    const greatEssayLength = averageEssayLength >= 300
+    const is18YearsOld = new Date(application.personal.dateOfBirth.value) < new Date('2023-10-20')
+    const isUSApplicant = application.personal.country.value === 'United States'
+    const isMassachusettsApplicant = application.personal.state.value === 'Massachusetts'
+    const essay1Length = application.hackathon.why.value.split(' ').length
+    const essay2Length = application.hackathon.proud.value.split(' ').length
+    const essay3Length = application.hackathon.role.value.split(' ').length
+    let averageEssayLength = (essay1Length + essay2Length + essay3Length) / 3
+    if (averageEssayLength > 150) {
+      averageEssayLength = 150
+    }
+    const essayLengthScore = averageEssayLength / 150
 
     if (isHarvardStudent) {
-      return {
-        suggestion: 'accept',
-        reason: 'Harvard student'
-      }
+      return 100
     } else if (!is18YearsOld) {
-      return {
-        suggestion: 'reject',
-        reason: 'Not 18 years old'
-      }
-    } else if (isMassachusettsApplicant && fineEssayLength) {
-      return {
-        suggestion: 'accept',
-        reason: 'Massachusetts applicant with reasonable essay length'
-      }
-    } else if (isUSApplicant && isGoodEssayLength) {
-      return {
-        suggestion: 'accept',
-        reason: 'US applicant with good essay length'
-      }
-    } else if (!isUSApplicant && greatEssayLength) {
-      return {
-        suggestion: 'accept',
-        reason: 'International applicant with great essay length'
-      }
+      return 0
+    } else if (isMassachusettsApplicant) {
+      return essayLengthScore * 100
+    } else if (isUSApplicant) {
+      return essayLengthScore * 80
     } else {
-      return {
-        suggestion: 'waitlist',
-        reason: 'Not enough information to make a decision'
-      }
+      return essayLengthScore * 60
+    }
+  }
+
+  function suggestApplicationDecision() {
+    if (fields.score >= 40) {
+      return 'accept'
+    } else if (fields.score >= 20) {
+      return 'waitlist'
+    } else {
+      return 'reject'
     }
   }
 
@@ -215,12 +202,23 @@
     const snapshot = await getDocs(collection($db, 'applications'))
     snapshot.forEach(doc => {
       const application = serialize.fromServer(doc.data())
-      applications.push(application)
+      application.score = getScore(application)
       allApplications.push(application)
       if (application.meta.uid.value !== doc.id) {
-        alert.trigger('error', 'Application UID mismatch', false)
+        alert.trigger(
+          'error',
+          'Application UID mismatch. Please contact tech team before proceeding.',
+          false
+        )
       }
     })
+    // sort allApplications by score
+    allApplications.sort((a, b) => {
+      return b.score - a.score
+    })
+
+    applications = allApplications.slice()
+
     numApplications = applications.length
 
     currentIndex = 0
@@ -343,12 +341,12 @@
   <!-- suggested application decision -->
   <div class="mb-3">
     <span class="font-bold">Suggested Decision: </span>
-    {#if suggestedDecision.suggestion === 'accept'}
-      <span class="text-green-500">{`Accept (${suggestedDecision.reason})`}</span>
-    {:else if suggestedDecision.suggestion === 'reject'}
-      <span class="text-red-500">{`Reject (${suggestedDecision.reason})`}</span>
-    {:else if suggestedDecision.suggestion === 'waitlist'}
-      <span class="text-blue-500">{`Waitlist (${suggestedDecision.reason})`}</span>
+    {#if suggestedDecision === 'accept'}
+      <span class="text-green-500">{`Accept (Score: ${fields.score})`}</span>
+    {:else if suggestedDecision === 'reject'}
+      <span class="text-red-500">{`Reject (Score: ${fields.score})`}</span>
+    {:else if suggestedDecision === 'waitlist'}
+      <span class="text-blue-500">{`Waitlist (Score: ${fields.score})`}</span>
     {/if}
   </div>
 
@@ -406,18 +404,23 @@
     <button
       class="btn btn-primary bg-gray-500 text-white p-2 rounded"
       on:click={() => {
-        if (suggestedDecision.suggestion === 'accept') {
+        if (suggestedDecision === 'accept') {
           fields.status.accepted.checked = true
           fields.status.rejected.checked = false
           fields.status.waitlisted.checked = false
-        } else if (suggestedDecision.suggestion === 'reject') {
+        } else if (suggestedDecision === 'reject') {
           fields.status.accepted.checked = false
           fields.status.rejected.checked = true
           fields.status.waitlisted.checked = false
-        } else if (suggestedDecision.suggestion === 'waitlist') {
+        } else if (suggestedDecision === 'waitlist') {
           fields.status.accepted.checked = false
           fields.status.rejected.checked = false
           fields.status.waitlisted.checked = true
+        } else {
+          alert.trigger({
+            type: 'error',
+            message: 'No suggestion available'
+          })
         }
         handleSave()
       }}
