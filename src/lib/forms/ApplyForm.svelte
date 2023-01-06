@@ -15,11 +15,10 @@
     reasonsJson,
     statesJson
   } from '$lib/data'
-  import { createFields, serialize, isValid } from '$lib/forms'
+  import { createFields, serialize } from '$lib/forms'
   import { alert } from '$lib/stores'
   import { onMount } from 'svelte'
   import Card from '$lib/components/Card.svelte'
-  import { templates } from '$lib/mail'
 
   let formEl
   let disabled = true
