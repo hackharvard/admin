@@ -51,7 +51,7 @@
       ...createFields.text('hhid'),
       ...createFields.checkbox('submitted')
     },
-    status: createFields.checkbox('approved', 'rejected', 'waitlisted')
+    status: createFields.checkbox('accepted', 'rejected', 'waitlisted')
   }
 
   let applications = []
@@ -64,7 +64,48 @@
     // isHarvardStudent || (18yearsOld && affiliatedWithUni && ((USapplicant && okEssayLength) || (internationalApplicant && goodEssayLength) ))
     const isHarvardStudent = fields.personal.currentSchool.value === 'Harvard University'
     // 18 years old as of 10/20/2023
-    const is18YearsOld = new Date(fields.personal.dateOfBirth.value) < new Date('2005-10-20')
+    const is18YearsOld = new Date(fields.personal.dateOfBirth.value) < new Date('2023-10-20')
+    const isUSApplicant = fields.personal.country.value === 'United States'
+    const isMassachusettsApplicant = fields.personal.state.value === 'Massachusetts'
+    const essay1Length = fields.hackathon.why.value.length
+    const essay2Length = fields.hackathon.proud.value.length
+    const essay3Length = fields.hackathon.role.value.length
+    const averageEssayLength = (essay1Length + essay2Length + essay3Length) / 3
+    const fineEssayLength = averageEssayLength >= 100
+    const isGoodEssayLength = averageEssayLength >= 200
+    const greatEssayLength = averageEssayLength >= 300
+
+    if (isHarvardStudent) {
+      return {
+        suggestion: 'accept',
+        reason: 'Harvard student'
+      }
+    } else if (!is18YearsOld) {
+      return {
+        suggestion: 'reject',
+        reason: 'Not 18 years old'
+      }
+    } else if (isMassachusettsApplicant && fineEssayLength) {
+      return {
+        suggestion: 'accept',
+        reason: 'Massachusetts applicant with reasonable essay length'
+      }
+    } else if (isUSApplicant && isGoodEssayLength) {
+      return {
+        suggestion: 'accept',
+        reason: 'US applicant with good essay length'
+      }
+    } else if (!isUSApplicant && greatEssayLength) {
+      return {
+        suggestion: 'accept',
+        reason: 'International applicant with great essay length'
+      }
+    } else {
+      return {
+        suggestion: 'waitlist',
+        reason: 'Not enough information to make a decision'
+      }
+    }
   }
 
   function handleSave() {
@@ -174,7 +215,7 @@
   </div>
 
   <!-- display current decision -->
-  {#if fields.status.approved.checked}
+  {#if fields.status.accepted.checked}
     <div class="mb-3">
       <span class="font-bold">Current Decision: </span>
       <span class="text-green-500">Accepted</span>
@@ -201,7 +242,7 @@
     <button
       class="btn btn-primary bg-lime-500  text-white p-2 rounded"
       on:click={() => {
-        fields.status.approved.checked = true
+        fields.status.accepted.checked = true
         fields.status.rejected.checked = false
         fields.status.waitlisted.checked = false
         handleSave()
@@ -213,7 +254,7 @@
     <button
       class="btn btn-primary bg-red-500  text-white p-2 rounded"
       on:click={() => {
-        fields.status.approved.checked = false
+        fields.status.accepted.checked = false
         fields.status.rejected.checked = true
         fields.status.waitlisted.checked = false
         handleSave()
@@ -225,7 +266,7 @@
     <button
       class="btn btn-primary bg-blue-500 text-white p-2 rounded"
       on:click={() => {
-        fields.status.approved.checked = false
+        fields.status.accepted.checked = false
         fields.status.rejected.checked = false
         fields.status.waitlisted.checked = true
         handleSave()
@@ -234,6 +275,8 @@
       Waitlist
     </button>
   </div>
+
+  <!-- everything below here should be essentially the same as the form in the portal, with irrelevant fields removed -->
 
   <form
     class={classNames('max-w-lg', showValidation && 'show-validation')}
