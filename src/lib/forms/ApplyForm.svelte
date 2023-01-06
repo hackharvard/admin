@@ -114,17 +114,17 @@
   }
 
   function handleSave() {
-    setDoc(doc($db, 'applications', fields.meta.uid), serialize.toServer(fields))
+    setDoc(doc($db, 'applications', fields.meta.uid.value), serialize.toServer(fields))
       .then(() => {
         alert.trigger('success', 'Application decision saved!')
         // wait 0.5 seconds before loading next application
-        setTimeout(() => {
-          if (currentIndex < numApplications - 1) {
-            currentIndex++
-            currentIndexDisplay++
-            loadApplication(currentIndex)
-          }
-        }, 500)
+        // setTimeout(() => {
+        //   if (currentIndex < numApplications - 1) {
+        //     currentIndex++
+        //     currentIndexDisplay++
+        //     loadApplication(currentIndex)
+        //   }
+        // }, 500)
       })
       .catch(err => {
         alert.trigger('error', err.code)
@@ -133,14 +133,15 @@
 
   function searchForApplications(query) {
     if (codeQuery) {
+      // split the query by &&
       const queries = query.split('&&')
       // remove whitespace
       queries.forEach((q, index) => {
         queries[index] = q.trim()
       })
 
+      // split each query by =
       const queryComponents = []
-
       queries.forEach(q => {
         const components = q.split('=')
         queryComponents.push({
@@ -148,6 +149,7 @@
           value: components[1].trim()
         })
       })
+
       applications = allApplications.filter(application => {
         let matches = true
 
@@ -167,7 +169,6 @@
             value = value.checked
           } else if (componentValue === 'false') {
             componentValue = false
-            console.log(value)
             value = value.checked
           } else {
             value = value.value
@@ -239,7 +240,8 @@
   <div class="mb-3">
     <label class="flex items-center">
       <input type="checkbox" class="form-checkbox" bind:checked={codeQuery} />
-      <span class="ml-2">Code query</span>
+      <span class="ml-2">Code query (Example: personal.gender = Man && status.accepted = true)</span
+      >
     </label>
   </div>
 
