@@ -54,6 +54,7 @@
     status: createFields.checkbox('accepted', 'rejected', 'waitlisted')
   }
 
+  let allApplications = []
   let applications = []
   let uids = []
   let numApplications = 0
@@ -130,7 +131,39 @@
       })
   }
 
+  function searchForApplications(query) {
+    applications = allApplications.filter(application => {
+      return (
+        application.personal.firstName.value.toLowerCase().includes(query) ||
+        application.personal.lastName.value.toLowerCase().includes(query) ||
+        application.personal.email.value.toLowerCase().includes(query) ||
+        application.meta.hhid.value.toLowerCase().includes(query) ||
+        application.personal.phoneNumber.value.toLowerCase().includes(query) ||
+        application.personal.address.value.toLowerCase().includes(query) ||
+        application.personal.city.value.toLowerCase().includes(query) ||
+        application.personal.state.value.toLowerCase().includes(query) ||
+        application.personal.country.value.toLowerCase().includes(query) ||
+        application.personal.zipCode.value.toLowerCase().includes(query) ||
+        application.academic.currentSchool.value.toLowerCase().includes(query) ||
+        application.academic.graduationYear.value == parseInt(query, 10) ||
+        application.academic.major.value.toLowerCase().includes(query) ||
+        application.hackathon.shirtSize.value.toLowerCase().includes(query) ||
+        application.hackathon.reason.value.toLowerCase().includes(query) ||
+        application.hackathon.why.value.toLowerCase().includes(query) ||
+        application.hackathon.role.value.toLowerCase().includes(query) ||
+        application.hackathon.proud.value.toLowerCase().includes(query)
+      )
+    })
+    numApplications = applications.length
+    currentIndex = 0
+    currentIndexDisplay = 1
+    loadApplication(0)
+  }
+
   function loadApplication(index) {
+    if (applications.length === 0) {
+      return
+    }
     fields = applications[index]
     suggestedDecision = suggestApplicationDecision()
   }
@@ -139,21 +172,37 @@
     // get all applications
     const snapshot = await getDocs(collection($db, 'applications'))
     snapshot.forEach(doc => {
-      applications.push(serialize.fromServer(doc.data()))
+      const application = serialize.fromServer(doc.data())
+      applications.push(application)
+      allApplications.push(application)
       uids.push(doc.id)
     })
     numApplications = applications.length
 
-    if (numApplications > 0) {
-      // comment this out when changing what data the application uses
-      // i.e., structure of fields
-      currentIndex = 0
-      loadApplication(0)
-    }
+    currentIndex = 0
+    loadApplication(0)
   })
 </script>
 
 <div>
+  <!-- text box for search -->
+  <div class="mb-10">
+    <input
+      class="appearance-none block px-3 pt-1 h-12 w-full transition-colors text-gray-900 rounded-md border focus:outline-none peer disabled:bg-white disabled:text-gray-400"
+      type="text"
+      placeholder="Search for applications"
+      on:keydown={e => {
+        if (e.key === 'Enter') {
+          const query = e.target.value.toLowerCase()
+          searchForApplications(query)
+        }
+      }}
+    />
+    {#if numApplications === 0}
+      <span>No results found</span>
+    {/if}
+  </div>
+
   <!-- left and right button -->
   <div class="flex justify-between mb-3">
     <button
@@ -287,6 +336,18 @@
       }}
     >
       Waitlist
+    </button>
+
+    <button
+      class="btn btn-primary bg-purple-500 text-white p-2 rounded"
+      on:click={() => {
+        fields.status.accepted.checked = false
+        fields.status.rejected.checked = false
+        fields.status.waitlisted.checked = false
+        handleSave()
+      }}
+    >
+      Undecided
     </button>
 
     <!-- take suggestion button -->
