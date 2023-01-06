@@ -60,6 +60,13 @@
   let currentIndex = 0
   let currentIndexDisplay = 1
 
+  function suggestApplicationDecision() {
+    // isHarvardStudent || (18yearsOld && affiliatedWithUni && ((USapplicant && okEssayLength) || (internationalApplicant && goodEssayLength) ))
+    const isHarvardStudent = fields.personal.currentSchool.value === 'Harvard University'
+    // 18 years old as of 10/20/2023
+    const is18YearsOld = new Date(fields.personal.dateOfBirth.value) < new Date('2005-10-20')
+  }
+
   function handleSave() {
     setDoc(doc($db, 'applications', uids[currentIndex]), serialize.toServer(fields))
       .then(() => {
@@ -167,17 +174,17 @@
   </div>
 
   <!-- display current decision -->
-  {#if fields.status.approved.value}
+  {#if fields.status.approved.checked}
     <div class="mb-3">
       <span class="font-bold">Current Decision: </span>
       <span class="text-green-500">Accepted</span>
     </div>
-  {:else if fields.status.rejected.value}
+  {:else if fields.status.rejected.checked}
     <div class="mb-3">
       <span class="font-bold">Current Decision: </span>
       <span class="text-red-500">Rejected</span>
     </div>
-  {:else if fields.status.waitlisted.value}
+  {:else if fields.status.waitlisted.checked}
     <div class="mb-3">
       <span class="font-bold">Current Decision: </span>
       <span class="text-blue-500">Waitlisted</span>
@@ -194,9 +201,9 @@
     <button
       class="btn btn-primary bg-lime-500  text-white p-2 rounded"
       on:click={() => {
-        fields.status.approved.value = true
-        fields.status.rejected.value = false
-        fields.status.waitlisted.value = false
+        fields.status.approved.checked = true
+        fields.status.rejected.checked = false
+        fields.status.waitlisted.checked = false
         handleSave()
       }}
     >
@@ -206,9 +213,9 @@
     <button
       class="btn btn-primary bg-red-500  text-white p-2 rounded"
       on:click={() => {
-        fields.status.approved.value = false
-        fields.status.rejected.value = true
-        fields.status.waitlisted.value = false
+        fields.status.approved.checked = false
+        fields.status.rejected.checked = true
+        fields.status.waitlisted.checked = false
         handleSave()
       }}
     >
@@ -218,9 +225,9 @@
     <button
       class="btn btn-primary bg-blue-500 text-white p-2 rounded"
       on:click={() => {
-        fields.status.approved.value = false
-        fields.status.rejected.value = false
-        fields.status.waitlisted.value = true
+        fields.status.approved.checked = false
+        fields.status.rejected.checked = false
+        fields.status.waitlisted.checked = true
         handleSave()
       }}
     >
