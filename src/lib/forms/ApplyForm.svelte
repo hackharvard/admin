@@ -116,15 +116,18 @@
     setDoc(doc($db, 'applications', uids[currentIndex]), serialize.toServer(fields))
       .then(() => {
         alert.trigger('success', 'Application decision saved!')
+        // wait 0.5 seconds before loading next application
+        setTimeout(() => {
+          if (currentIndex < numApplications - 1) {
+            currentIndex++
+            currentIndexDisplay++
+            loadApplication(currentIndex)
+          }
+        }, 500)
       })
       .catch(err => {
         alert.trigger('error', err.code)
       })
-    if (currentIndex < numApplications - 1) {
-      currentIndex++
-      currentIndexDisplay++
-      loadApplication(currentIndex)
-    }
   }
 
   function loadApplication(index) {
