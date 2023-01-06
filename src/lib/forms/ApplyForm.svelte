@@ -59,10 +59,14 @@
   let numApplications = 0
   let currentIndex = 0
   let currentIndexDisplay = 1
+  let suggestedDecision = {
+    suggestion: 'waitlist',
+    reason: 'Not enough information to make a decision'
+  }
 
   function suggestApplicationDecision() {
     // isHarvardStudent || (18yearsOld && affiliatedWithUni && ((USapplicant && okEssayLength) || (internationalApplicant && goodEssayLength) ))
-    const isHarvardStudent = fields.personal.currentSchool.value === 'Harvard University'
+    const isHarvardStudent = fields.academic.currentSchool.value === 'Harvard University'
     // 18 years old as of 10/20/2023
     const is18YearsOld = new Date(fields.personal.dateOfBirth.value) < new Date('2023-10-20')
     const isUSApplicant = fields.personal.country.value === 'United States'
@@ -111,17 +115,21 @@
   function handleSave() {
     setDoc(doc($db, 'applications', uids[currentIndex]), serialize.toServer(fields))
       .then(() => {
-        disabled = false
         alert.trigger('success', 'Application decision saved!')
       })
       .catch(err => {
-        disabled = false
         alert.trigger('error', err.code)
       })
+    if (currentIndex < numApplications - 1) {
+      currentIndex++
+      currentIndexDisplay++
+      loadApplication(currentIndex)
+    }
   }
 
   function loadApplication(index) {
     fields = applications[index]
+    suggestedDecision = suggestApplicationDecision()
   }
 
   onMount(async () => {
@@ -215,27 +223,30 @@
   </div>
 
   <!-- display current decision -->
-  {#if fields.status.accepted.checked}
-    <div class="mb-3">
-      <span class="font-bold">Current Decision: </span>
+  <div class="mb-3">
+    <span class="font-bold">Current Decision: </span>
+    {#if fields.status.accepted.checked}
       <span class="text-green-500">Accepted</span>
-    </div>
-  {:else if fields.status.rejected.checked}
-    <div class="mb-3">
-      <span class="font-bold">Current Decision: </span>
+    {:else if fields.status.rejected.checked}
       <span class="text-red-500">Rejected</span>
-    </div>
-  {:else if fields.status.waitlisted.checked}
-    <div class="mb-3">
-      <span class="font-bold">Current Decision: </span>
+    {:else if fields.status.waitlisted.checked}
       <span class="text-blue-500">Waitlisted</span>
-    </div>
-  {:else}
-    <div class="mb-3">
-      <span class="font-bold">Current Decision: </span>
+    {:else}
       <span class="text-gray-500">Undecided</span>
-    </div>
-  {/if}
+    {/if}
+  </div>
+
+  <!-- suggested application decision -->
+  <div class="mb-3">
+    <span class="font-bold">Suggested Decision: </span>
+    {#if suggestedDecision.suggestion === 'accept'}
+      <span class="text-green-500">{`Accept (${suggestedDecision.reason})`}</span>
+    {:else if suggestedDecision.suggestion === 'reject'}
+      <span class="text-red-500">{`Reject (${suggestedDecision.reason})`}</span>
+    {:else if suggestedDecision.suggestion === 'waitlist'}
+      <span class="text-blue-500">{`Waitlist (${suggestedDecision.reason})`}</span>
+    {/if}
+  </div>
 
   <!-- accept, reject, waitlist buttons -->
   <div class="flex justify-between mb-3">
@@ -273,6 +284,29 @@
       }}
     >
       Waitlist
+    </button>
+
+    <!-- take suggestion button -->
+    <button
+      class="btn btn-primary bg-gray-500 text-white p-2 rounded"
+      on:click={() => {
+        if (suggestedDecision.suggestion === 'accept') {
+          fields.status.accepted.checked = true
+          fields.status.rejected.checked = false
+          fields.status.waitlisted.checked = false
+        } else if (suggestedDecision.suggestion === 'reject') {
+          fields.status.accepted.checked = false
+          fields.status.rejected.checked = true
+          fields.status.waitlisted.checked = false
+        } else if (suggestedDecision.suggestion === 'waitlist') {
+          fields.status.accepted.checked = false
+          fields.status.rejected.checked = false
+          fields.status.waitlisted.checked = true
+        }
+        handleSave()
+      }}
+    >
+      Take Suggestion
     </button>
   </div>
 
