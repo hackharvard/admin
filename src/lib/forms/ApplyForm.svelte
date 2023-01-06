@@ -1,7 +1,7 @@
 <script>
   import { classNames } from '$lib/utils'
-  import { doc, getDocs, setDoc, addDoc, collection } from 'firebase/firestore'
-  import { db, user, storage } from '$lib/firebase'
+  import { doc, getDocs, collection, updateDoc } from 'firebase/firestore'
+  import { db } from '$lib/firebase'
   import Input from '$lib/components/Input.svelte'
   import Select from '$lib/components/Select.svelte'
   import Textarea from '$lib/components/Textarea.svelte'
@@ -114,18 +114,11 @@
   }
 
   function handleSave() {
-    // TODO: change to update doc instead
-    setDoc(doc($db, 'applications', fields.meta.uid.value), serialize.toServer(fields))
+    updateDoc(doc(db, 'applications', fields.meta.uid.value), {
+      status: serialize.toServer(fields.status)
+    })
       .then(() => {
         alert.trigger('success', 'Application decision saved!')
-        // wait 0.5 seconds before loading next application
-        // setTimeout(() => {
-        //   if (currentIndex < numApplications - 1) {
-        //     currentIndex++
-        //     currentIndexDisplay++
-        //     loadApplication(currentIndex)
-        //   }
-        // }, 500)
       })
       .catch(err => {
         alert.trigger('error', err.code)
