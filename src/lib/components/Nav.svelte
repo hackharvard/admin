@@ -6,7 +6,7 @@
   import Brand from './Brand.svelte'
   import { navigating } from '$app/stores'
   import { fade } from 'svelte/transition'
-  import { user, db } from '$lib/firebase'
+  import { user, db, auth } from '$lib/firebase'
   import AnnouncementsBell from './AnnouncementsBell.svelte'
   import { getDoc, doc } from 'firebase/firestore'
 
@@ -21,6 +21,7 @@
       const profileDocData = profileDoc.data()
       const role = profileDocData.role
       if (role !== 'admin') {
+        await auth.signOut()
         window.location.href = 'https://portal.hackharvard.io'
       }
     }
