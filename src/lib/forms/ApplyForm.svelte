@@ -114,6 +114,7 @@
   }
 
   function handleSave() {
+    // TODO: change to update doc instead
     setDoc(doc($db, 'applications', fields.meta.uid.value), serialize.toServer(fields))
       .then(() => {
         alert.trigger('success', 'Application decision saved!')
