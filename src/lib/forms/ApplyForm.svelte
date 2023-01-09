@@ -101,7 +101,7 @@
   }
 
   function handleSave() {
-    updateDoc(doc(db, 'applications', fields.meta.uid.value), {
+    updateDoc(doc($db, 'applications', fields.meta.uid.value), {
       status: serialize.toServer(fields.status)
     })
       .then(() => {
