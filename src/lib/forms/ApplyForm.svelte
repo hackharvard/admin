@@ -203,14 +203,16 @@
     const snapshot = await getDocs(collection($db, 'applications'))
     snapshot.forEach(doc => {
       const application = serialize.fromServer(doc.data())
-      application.score = getScore(application)
-      allApplications.push(application)
-      if (application.meta.uid.value !== doc.id) {
-        alert.trigger(
-          'error',
-          'Application UID mismatch. Please contact tech team before proceeding.',
-          false
-        )
+      if (application.meta.submitted.checked) {
+        application.score = getScore(application)
+        allApplications.push(application)
+        if (application.meta.uid.value !== doc.id) {
+          alert.trigger(
+            'error',
+            'Application UID mismatch. Please contact tech team before proceeding.',
+            false
+          )
+        }
       }
     })
     // sort allApplications by score
