@@ -72,23 +72,19 @@ function createAuth() {
 
 export const auth = createAuth()
 
-function createUser() {
-  let user = undefined
-  const { subscribe } = derived(auth, async ($auth, set) => {
-    set(user)
-    const unsubscribe = onAuthStateChanged($auth, userData => {
-      user = userData
-      set(user)
-    })
-    return unsubscribe
+function createDb() {
+  let db = undefined
+  const { subscribe } = derived(app, ($app, set) => {
+    db = getFirestore($app)
+    set(db)
   })
   async function get() {
     let unsubscribe
-    const userData = new Promise(resolve => {
-      unsubscribe = subscribe(userData => {
-        if (userData !== undefined) {
-          if (userData) {
-            resolve(userData)
+    const dbData = new Promise(resolve => {
+      unsubscribe = subscribe(dbData => {
+        if (dbData !== undefined) {
+          if (dbData) {
+            resolve(dbData)
           } else {
             resolve(null)
           }
@@ -96,25 +92,7 @@ function createUser() {
       })
     })
     return new Promise(resolve => {
-      userData.then(result => {
-        unsubscribe()
-        resolve(result)
-      })
-    })
-  }
-  async function loaded() {
-    let unsubscribe
-    const userData = new Promise(resolve => {
-      unsubscribe = subscribe(userData => {
-        if (userData !== undefined) {
-          if (userData) {
-            resolve(true)
-          }
-        }
-      })
-    })
-    return new Promise(resolve => {
-      userData.then(result => {
+      dbData.then(result => {
         unsubscribe()
         resolve(result)
       })
@@ -122,16 +100,11 @@ function createUser() {
   }
   return {
     subscribe,
-    get,
-    loaded
+    get
   }
 }
 
-export const user = createUser()
-
-export const db = derived(app, ($app, set) => {
-  set(getFirestore($app))
-})
+export const db = createDb()
 
 function createStorage() {
   let storage = undefined
@@ -178,3 +151,67 @@ function createStorage() {
 }
 
 export const storage = createStorage()
+
+function createUser() {
+  let user = undefined
+  const { subscribe } = derived(auth, async ($auth, set) => {
+    set(user)
+    const unsubscribe = onAuthStateChanged($auth, userData => {
+      user = userData
+      set(user)
+    })
+    return unsubscribe
+  })
+  async function get() {
+    let unsubscribe
+    const userData = new Promise(resolve => {
+      unsubscribe = subscribe(userData => {
+        if (userData !== undefined) {
+          if (userData) {
+            resolve(userData)
+          } else {
+            resolve(null)
+          }
+        }
+      })
+    })
+    return new Promise(resolve => {
+      userData.then(result => {
+        unsubscribe()
+        resolve(result)
+      })
+    })
+  }
+  async function profile() {
+    await loaded()
+    const $db = await db.get()
+    const { getDoc, doc } = await import('firebase/firestore')
+    return (await getDoc(doc($db, 'users', user.uid))).data()
+  }
+  async function loaded() {
+    let unsubscribe
+    const userData = new Promise(resolve => {
+      unsubscribe = subscribe(userData => {
+        if (userData !== undefined) {
+          if (userData) {
+            resolve(true)
+          }
+        }
+      })
+    })
+    return new Promise(resolve => {
+      userData.then(result => {
+        unsubscribe()
+        resolve(result)
+      })
+    })
+  }
+  return {
+    subscribe,
+    get,
+    profile,
+    loaded
+  }
+}
+
+export const user = createUser()
