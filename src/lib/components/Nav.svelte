@@ -26,8 +26,8 @@
       href: '/dashboard'
     },
     {
-      name: 'Apply',
-      href: '/apply'
+      name: 'Applications',
+      href: '/applications'
     },
     {
       name: 'Group',

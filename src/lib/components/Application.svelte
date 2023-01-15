@@ -5,7 +5,6 @@
   import Input from '$lib/components/Input.svelte'
   import Select from '$lib/components/Select.svelte'
   import Textarea from '$lib/components/Textarea.svelte'
-  import Spreadsheet from '$lib/components/Spreadsheet.svelte'
   import {
     racesEthnicitiesJson,
     gendersJson,
@@ -226,522 +225,545 @@
   })
 </script>
 
-<div class="flex flex-row">
-  <div class="mr-5">
-    <Spreadsheet
-      bind:currentIndex
-      {applications}
-      onChange={index => {
-        currentIndexDisplay = index + 1
-        loadApplication(index)
-      }}
-    />
-  </div>
-  <div>
-    <!-- checkbox for code query -->
-    <div class="mb-3">
-      <label class="flex items-center">
-        <input type="checkbox" class="form-checkbox" bind:checked={codeQuery} />
-        <span class="ml-2"
-          >Code query (Example: personal.gender = Man && status.accepted = true)</span
-        >
-      </label>
-    </div>
+<!-- checkbox for code query -->
+<div class="mb-3">
+  <label class="flex items-center">
+    <input type="checkbox" class="form-checkbox" bind:checked={codeQuery} />
+    <span class="ml-2">Code query (Example: personal.gender = Man && status.accepted = true)</span>
+  </label>
+</div>
 
-    <!-- text box for search -->
-    <div class="mb-10">
+<!-- text box for search -->
+<div class="mb-10">
+  <input
+    class="appearance-none block px-3 pt-1 h-12 w-full transition-colors text-gray-900 rounded-md border focus:outline-none peer disabled:bg-white disabled:text-gray-400"
+    type="text"
+    placeholder="Search for applications"
+    on:keydown={e => {
+      if (e.key === 'Enter') {
+        searchForApplications(e.target.value)
+      }
+    }}
+  />
+  {#if numApplications === 0}
+    <span>No results found</span>
+  {/if}
+</div>
+
+<!-- left and right button -->
+<div class="flex justify-between mb-3">
+  <button
+    class="btn btn-primary"
+    on:click={() => {
+      if (currentIndex > 0) {
+        currentIndex--
+        currentIndexDisplay--
+        loadApplication(currentIndex)
+      }
+    }}
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="w-6 h-6"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+  </button>
+
+  {#if numApplications > 0}
+    <span class="font-bold">
       <input
-        class="appearance-none block px-3 pt-1 h-12 w-full transition-colors text-gray-900 rounded-md border focus:outline-none peer disabled:bg-white disabled:text-gray-400"
-        type="text"
-        placeholder="Search for applications"
-        on:keydown={e => {
-          if (e.key === 'Enter') {
-            searchForApplications(e.target.value)
+        type="number"
+        bind:value={currentIndexDisplay}
+        min="1"
+        max={numApplications}
+        on:change={() => {
+          currentIndex = currentIndexDisplay - 1
+          if (currentIndex > numApplications - 1) {
+            currentIndex = numApplications - 1
+            currentIndexDisplay = numApplications
           }
+          if (currentIndex < 0) {
+            currentIndex = 0
+            currentIndexDisplay = 1
+          }
+          loadApplication(currentIndex)
         }}
       />
-      {#if numApplications === 0}
-        <span>No results found</span>
-      {/if}
-    </div>
+      {`/ ${numApplications}`}</span
+    >
+  {/if}
 
-    <!-- left and right button -->
-    <div class="flex justify-between mb-3">
-      <button
-        class="btn btn-primary"
-        on:click={() => {
-          if (currentIndex > 0) {
-            currentIndex--
-            currentIndexDisplay--
-            loadApplication(currentIndex)
-          }
-        }}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="w-6 h-6"
+  <button
+    class="btn btn-primary"
+    on:click={() => {
+      if (currentIndex < applications.length - 1) {
+        currentIndex++
+        currentIndexDisplay++
+        loadApplication(currentIndex)
+      }
+    }}
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="w-6 h-6"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+  </button>
+</div>
+
+<!-- accept, reject, waitlist buttons -->
+<Card class="sticky top-0 mb-3 z-20">
+  <div>
+    {#if fields.status.accepted.checked || fields.status.rejected.checked || fields.status.waitlisted.checked}
+      <div class="flex items-center justify-between">
+        <div
+          class={classNames(
+            'flex items-center gap-1 shadow-sm rounded-md px-4 py-2 ',
+            fields.status.accepted.checked && 'bg-green-100 text-green-900',
+            fields.status.rejected.checked && 'bg-red-100 text-red-900',
+            fields.status.waitlisted.checked && 'bg-yellow-100 text-yellow-900'
+          )}
         >
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-
-      {#if numApplications > 0}
-        <span class="font-bold">
-          <input
-            type="number"
-            bind:value={currentIndexDisplay}
-            min="1"
-            max={numApplications}
-            on:change={() => {
-              currentIndex = currentIndexDisplay - 1
-              if (currentIndex > numApplications - 1) {
-                currentIndex = numApplications - 1
-                currentIndexDisplay = numApplications
-              }
-              if (currentIndex < 0) {
-                currentIndex = 0
-                currentIndexDisplay = 1
-              }
-              loadApplication(currentIndex)
+          {#if fields.status.accepted.checked}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-6 h-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          {:else if fields.status.rejected.checked}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-6 h-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          {:else}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-6 h-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          {/if}
+          <span>
+            {`Applicant is ${
+              fields.status.accepted.checked
+                ? 'accepted'
+                : fields.status.rejected.checked
+                ? 'rejected'
+                : 'waitlisted'
+            }.`}
+          </span>
+        </div>
+        <button
+          class="uppercase text-sm shadow-sm rounded-md bg-gray-100 px-2 h-8 text-gray-900 hover:bg-gray-200 transition-colors duration-300 disabled:text-gray-500 disabled:bg-gray-200"
+          on:click={() => {
+            fields.status.accepted.checked = false
+            fields.status.rejected.checked = false
+            fields.status.waitlisted.checked = false
+            handleSave()
+          }}
+        >
+          Clear decision
+        </button>
+      </div>
+    {:else}
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <button
+            class="flex items-center gap-1 shadow-sm rounded-md bg-green-100 px-4 py-2 text-green-900 hover:bg-green-200 transition-colors duration-300 disabled:text-green-500 disabled:bg-green-200"
+            on:click={() => {
+              fields.status.accepted.checked = true
+              fields.status.rejected.checked = false
+              fields.status.waitlisted.checked = false
+              handleSave()
             }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-6 h-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>Accept</span>
+          </button>
+          <button
+            class="flex items-center gap-1 shadow-sm rounded-md bg-red-100 px-4 py-2 text-red-900 hover:bg-red-200 transition-colors duration-300 disabled:text-red-500 disabled:bg-red-200"
+            on:click={() => {
+              fields.status.accepted.checked = false
+              fields.status.rejected.checked = true
+              fields.status.waitlisted.checked = false
+              handleSave()
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-6 h-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>Reject</span>
+          </button>
+          <button
+            class="flex items-center gap-1 shadow-sm rounded-md bg-yellow-100 px-4 py-2 text-yellow-900 hover:bg-yellow-200 transition-colors duration-300 disabled:text-yellow-500 disabled:bg-yellow-200"
+            on:click={() => {
+              fields.status.accepted.checked = false
+              fields.status.rejected.checked = false
+              fields.status.waitlisted.checked = true
+              handleSave()
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-6 h-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>Waitlist</span>
+          </button>
+        </div>
+        <button
+          class="uppercase font-bold flex items-center gap-1 shadow-sm rounded-md bg-gray-100 px-4 py-2 text-gray-900 hover:bg-gray-200 transition-colors duration-300 disabled:text-gray-500 disabled:bg-gray-200"
+          type="button"
+          on:click={() => {
+            if (suggestedDecision === 'accept') {
+              fields.status.accepted.checked = true
+              fields.status.rejected.checked = false
+              fields.status.waitlisted.checked = false
+            } else if (suggestedDecision === 'reject') {
+              fields.status.accepted.checked = false
+              fields.status.rejected.checked = true
+              fields.status.waitlisted.checked = false
+            } else if (suggestedDecision === 'waitlist') {
+              fields.status.accepted.checked = false
+              fields.status.rejected.checked = false
+              fields.status.waitlisted.checked = true
+            } else {
+              alert.trigger({
+                type: 'error',
+                message: 'No suggestion available'
+              })
+            }
+            handleSave()
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-6 h-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z"
+            />
+          </svg>
+          <span>Suggestion: </span>
+          {#if suggestedDecision === 'accept'}
+            <span class="text-green-600">{`Accept (Score: ${fields.score})`}</span>
+          {:else if suggestedDecision === 'reject'}
+            <span class="text-red-600">{`Reject (Score: ${fields.score})`}</span>
+          {:else if suggestedDecision === 'waitlist'}
+            <span class="text-blue-600">{`Waitlist (Score: ${fields.score})`}</span>
+          {/if}
+        </button>
+      </div>
+    {/if}
+  </div>
+</Card>
+
+<!-- similar to portal apply form except sanitized -->
+<div class="w-full flex justify-center">
+  <div class="max-w-lg">
+    <fieldset class="grid gap-6" disabled={true}>
+      <div class="grid gap-1">
+        <span class="font-bold">Personal</span>
+        <Card class="grid gap-3 my-2">
+          <div class="bg-gray-100 shadow-sm rounded-md px-3 py-2">
+            {`Name: ${fields.personal.firstName.value} ${fields.personal.lastName.value}`}
+          </div>
+          <div class="bg-gray-100 shadow-sm rounded-md px-3 py-2">
+            {`Email: ${fields.personal.email.value}`}
+          </div>
+        </Card>
+        {#if fields.hackathon.resume.upload.url !== ''}
+          <a
+            class="mb-2"
+            href={fields.hackathon.resume.upload.url}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Card class="flex items-center gap-3">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-6 h-6"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                />
+              </svg>
+              <span>{`${fields.hackathon.resume.upload.name} (resume)`}</span>
+            </Card>
+          </a>
+        {/if}
+        <Input
+          type="date"
+          bind:field={fields.personal.dateOfBirth}
+          placeholder="Date of birth"
+          floating
+          required
+        />
+        <div class="grid sm:grid-cols-2 gap-1 sm:gap-3">
+          <Select
+            bind:field={fields.personal.gender}
+            placeholder="Gender"
+            sourceJson={gendersJson}
+            floating
+            required
           />
-          {`/ ${numApplications}`}</span
-        >
-      {/if}
-
-      <button
-        class="btn btn-primary"
-        on:click={() => {
-          if (currentIndex < applications.length - 1) {
-            currentIndex++
-            currentIndexDisplay++
-            loadApplication(currentIndex)
-          }
-        }}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="w-6 h-6"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-    </div>
-
-    <!-- accept, reject, waitlist buttons -->
-    <Card class="sticky top-0 mb-3 z-20">
-      <div>
-        {#if fields.status.accepted.checked || fields.status.rejected.checked || fields.status.waitlisted.checked}
-          <div class="flex items-center justify-between">
-            <div
-              class={classNames(
-                'flex items-center gap-1 shadow-sm rounded-md px-4 py-2 ',
-                fields.status.accepted.checked && 'bg-green-100 text-green-900',
-                fields.status.rejected.checked && 'bg-red-100 text-red-900',
-                fields.status.waitlisted.checked && 'bg-yellow-100 text-yellow-900'
-              )}
-            >
-              {#if fields.status.accepted.checked}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="w-6 h-6"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              {:else if fields.status.rejected.checked}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="w-6 h-6"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              {:else}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="w-6 h-6"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              {/if}
-              <span>
-                {`Applicant is ${
-                  fields.status.accepted.checked
-                    ? 'accepted'
-                    : fields.status.rejected.checked
-                    ? 'rejected'
-                    : 'waitlisted'
-                }.`}
-              </span>
-            </div>
-            <button
-              class="uppercase text-sm shadow-sm rounded-md bg-gray-100 px-2 h-8 text-gray-900 hover:bg-gray-200 transition-colors duration-300 disabled:text-gray-500 disabled:bg-gray-200"
-              on:click={() => {
-                fields.status.accepted.checked = false
-                fields.status.rejected.checked = false
-                fields.status.waitlisted.checked = false
-                handleSave()
-              }}
-            >
-              Clear decision
-            </button>
+          <Select
+            bind:field={fields.personal.raceEthnicity}
+            name="race"
+            autocomplete="race"
+            placeholder="Race or ethnicity"
+            sourceJson={racesEthnicitiesJson}
+            floating
+            required
+          />
+        </div>
+        <Input
+          type="tel"
+          bind:field={fields.personal.phoneNumber}
+          placeholder="Phone number"
+          floating
+          required
+        />
+        <Input
+          type="text"
+          bind:field={fields.personal.address}
+          placeholder="Address"
+          floating
+          required
+        />
+        <div class="grid sm:grid-cols-2 gap-1 sm:gap-3">
+          <Input
+            type="text"
+            bind:field={fields.personal.city}
+            placeholder="City"
+            floating
+            required
+          />
+          <Select
+            bind:field={fields.personal.state}
+            placeholder="State"
+            sourceJson={statesJson}
+            floating
+          />
+        </div>
+        <div class="grid sm:grid-cols-2 gap-1 sm:gap-3">
+          <Select
+            bind:field={fields.personal.country}
+            placeholder="Country"
+            sourceJson={worldJson}
+            floating
+            required
+          />
+          <Input
+            type="text"
+            bind:field={fields.personal.zipCode}
+            placeholder="Zip code"
+            floating
+            required
+          />
+        </div>
+      </div>
+      <div class="grid gap-1">
+        <span class="font-bold">Academic</span>
+        <div class="grid sm:grid-cols-3 gap-1 sm:gap-3">
+          <div class="sm:col-span-2">
+            <Select
+              bind:field={fields.academic.currentSchool}
+              placeholder="Current school"
+              sourceJson={schoolsJson}
+              floating
+              required
+            />
           </div>
-        {:else}
-          <!-- suggested application decision -->
-          <div class="mb-3">
-            <span class="font-bold">Suggested Decision: </span>
-            {#if suggestedDecision === 'accept'}
-              <span class="text-green-500">{`Accept (Score: ${fields.score})`}</span>
-            {:else if suggestedDecision === 'reject'}
-              <span class="text-red-500">{`Reject (Score: ${fields.score})`}</span>
-            {:else if suggestedDecision === 'waitlist'}
-              <span class="text-blue-500">{`Waitlist (Score: ${fields.score})`}</span>
-            {/if}
-          </div>
-          <div class="flex items-center gap-4">
-            <button
-              class="flex items-center gap-1 shadow-sm rounded-md bg-green-100 px-4 py-2 text-green-900 hover:bg-green-200 transition-colors duration-300 disabled:text-green-500 disabled:bg-green-200"
-              on:click={() => {
-                fields.status.accepted.checked = true
-                fields.status.rejected.checked = false
-                fields.status.waitlisted.checked = false
-                handleSave()
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>Accept</span>
-            </button>
-            <button
-              class="flex items-center gap-1 shadow-sm rounded-md bg-red-100 px-4 py-2 text-red-900 hover:bg-red-200 transition-colors duration-300 disabled:text-red-500 disabled:bg-red-200"
-              on:click={() => {
-                fields.status.accepted.checked = false
-                fields.status.rejected.checked = true
-                fields.status.waitlisted.checked = false
-                handleSave()
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>Reject</span>
-            </button>
-            <button
-              class="flex items-center gap-1 shadow-sm rounded-md bg-yellow-100 px-4 py-2 text-yellow-900 hover:bg-yellow-200 transition-colors duration-300 disabled:text-yellow-500 disabled:bg-yellow-200"
-              on:click={() => {
-                fields.status.accepted.checked = false
-                fields.status.rejected.checked = false
-                fields.status.waitlisted.checked = true
-                handleSave()
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>Waitlist</span>
-            </button>
+          <Input
+            type="number"
+            bind:field={fields.academic.graduationYear}
+            placeholder="Graduation year"
+            min={new Date().getFullYear()}
+            max={new Date().getFullYear() + 20}
+            floating
+            required
+          />
+        </div>
+        <Input
+          type="text"
+          bind:field={fields.academic.major}
+          placeholder="Major"
+          floating
+          required
+        />
+      </div>
+      <div class="grid gap-1">
+        <span class="font-bold">Hackathon</span>
+        <div class="grid grid-cols-2 sm:grid-cols-3">
+          <Select
+            bind:field={fields.hackathon.shirtSize}
+            placeholder="Shirt size"
+            sourceJson={shirtSizeJson}
+            floating
+            required
+          />
+        </div>
+        <div class="grid grid-cols-1">
+          <Input
+            type="checkbox"
+            bind:field={fields.hackathon.firstHackathon}
+            placeholder="Will HackHarvard be your first hackathon?"
+          />
+          <Input
+            type="checkbox"
+            bind:field={fields.hackathon.previouslyParticipated}
+            placeholder="Have you previously participated at a HackHarvard hackathon?"
+          />
+        </div>
+        <div class="mt-2">
+          <Select
+            bind:field={fields.hackathon.reason}
+            placeholder="How did you learn about HackHarvard?"
+            sourceJson={reasonsJson}
+            floating
+            required
+          />
+        </div>
+        <div class="mt-2">
+          <Textarea
+            bind:field={fields.hackathon.why}
+            placeholder="Why do you want to attend HackHarvard?"
+            required
+          />
+        </div>
+        <div class="mt-2">
+          <Textarea
+            bind:field={fields.hackathon.role}
+            placeholder="What do you see as your role on a hackathon team?"
+            required
+          />
+        </div>
+        <div class="mt-2">
+          <Textarea
+            bind:field={fields.hackathon.proud}
+            placeholder="What's something you've made that you're proud of?"
+            required
+          />
+        </div>
+        {#if fields.hackathon.resume.upload.url === ''}
+          <div class="mt-2">
+            <Input
+              bind:field={fields.hackathon.resume}
+              type="file"
+              placeholder="Upload your resume (max 1 MB; 1 page PDF)"
+              maxSize={1 * 1024 * 1024}
+              accept={['application/pdf']}
+              required
+            />
           </div>
         {/if}
       </div>
-    </Card>
-
-    <!-- similar to portal apply form except sanitized -->
-    <div class="w-full flex justify-center">
-      <div class="max-w-lg">
-        <fieldset class="grid gap-6" disabled={true}>
-          <div class="grid gap-1">
-            <span class="font-bold">Personal</span>
-            <Card class="grid gap-3 my-2">
-              <div class="bg-gray-100 shadow-sm rounded-md px-3 py-2">
-                {`Name: ${fields.personal.firstName.value} ${fields.personal.lastName.value}`}
-              </div>
-              <div class="bg-gray-100 shadow-sm rounded-md px-3 py-2">
-                {`Email: ${fields.personal.email.value}`}
-              </div>
-            </Card>
-            {#if fields.hackathon.resume.upload.url !== ''}
-              <a
-                class="mb-2"
-                href={fields.hackathon.resume.upload.url}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <Card class="flex items-center gap-3">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="w-6 h-6"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-                    />
-                  </svg>
-                  <span>{`${fields.hackathon.resume.upload.name} (resume)`}</span>
-                </Card>
-              </a>
-            {/if}
+      <div class="grid gap-1">
+        <span class="font-bold">Dietary restrictions</span>
+        <div class="grid grid-cols-2">
+          {#each dietaryRestrictionsJson as dietaryRestriction}
             <Input
-              type="date"
-              bind:field={fields.personal.dateOfBirth}
-              placeholder="Date of birth"
-              floating
-              required
+              type="checkbox"
+              bind:group={fields.hackathon.dietaryRestrictions}
+              placeholder={dietaryRestriction.name}
             />
-            <div class="grid sm:grid-cols-2 gap-1 sm:gap-3">
-              <Select
-                bind:field={fields.personal.gender}
-                placeholder="Gender"
-                sourceJson={gendersJson}
-                floating
-                required
-              />
-              <Select
-                bind:field={fields.personal.raceEthnicity}
-                name="race"
-                autocomplete="race"
-                placeholder="Race or ethnicity"
-                sourceJson={racesEthnicitiesJson}
-                floating
-                required
-              />
-            </div>
-            <Input
-              type="tel"
-              bind:field={fields.personal.phoneNumber}
-              placeholder="Phone number"
-              floating
-              required
-            />
-            <Input
-              type="text"
-              bind:field={fields.personal.address}
-              placeholder="Address"
-              floating
-              required
-            />
-            <div class="grid sm:grid-cols-2 gap-1 sm:gap-3">
-              <Input
-                type="text"
-                bind:field={fields.personal.city}
-                placeholder="City"
-                floating
-                required
-              />
-              <Select
-                bind:field={fields.personal.state}
-                placeholder="State"
-                sourceJson={statesJson}
-                floating
-              />
-            </div>
-            <div class="grid sm:grid-cols-2 gap-1 sm:gap-3">
-              <Select
-                bind:field={fields.personal.country}
-                placeholder="Country"
-                sourceJson={worldJson}
-                floating
-                required
-              />
-              <Input
-                type="text"
-                bind:field={fields.personal.zipCode}
-                placeholder="Zip code"
-                floating
-                required
-              />
-            </div>
-          </div>
-          <div class="grid gap-1">
-            <span class="font-bold">Academic</span>
-            <div class="grid sm:grid-cols-3 gap-1 sm:gap-3">
-              <div class="sm:col-span-2">
-                <Select
-                  bind:field={fields.academic.currentSchool}
-                  placeholder="Current school"
-                  sourceJson={schoolsJson}
-                  floating
-                  required
-                />
-              </div>
-              <Input
-                type="number"
-                bind:field={fields.academic.graduationYear}
-                placeholder="Graduation year"
-                min={new Date().getFullYear()}
-                max={new Date().getFullYear() + 20}
-                floating
-                required
-              />
-            </div>
-            <Input
-              type="text"
-              bind:field={fields.academic.major}
-              placeholder="Major"
-              floating
-              required
-            />
-          </div>
-          <div class="grid gap-1">
-            <span class="font-bold">Hackathon</span>
-            <div class="grid grid-cols-2 sm:grid-cols-3">
-              <Select
-                bind:field={fields.hackathon.shirtSize}
-                placeholder="Shirt size"
-                sourceJson={shirtSizeJson}
-                floating
-                required
-              />
-            </div>
-            <div class="grid grid-cols-1">
-              <Input
-                type="checkbox"
-                bind:field={fields.hackathon.firstHackathon}
-                placeholder="Will HackHarvard be your first hackathon?"
-              />
-              <Input
-                type="checkbox"
-                bind:field={fields.hackathon.previouslyParticipated}
-                placeholder="Have you previously participated at a HackHarvard hackathon?"
-              />
-            </div>
-            <div class="mt-2">
-              <Select
-                bind:field={fields.hackathon.reason}
-                placeholder="How did you learn about HackHarvard?"
-                sourceJson={reasonsJson}
-                floating
-                required
-              />
-            </div>
-            <div class="mt-2">
-              <Textarea
-                bind:field={fields.hackathon.why}
-                placeholder="Why do you want to attend HackHarvard?"
-                required
-              />
-            </div>
-            <div class="mt-2">
-              <Textarea
-                bind:field={fields.hackathon.role}
-                placeholder="What do you see as your role on a hackathon team?"
-                required
-              />
-            </div>
-            <div class="mt-2">
-              <Textarea
-                bind:field={fields.hackathon.proud}
-                placeholder="What's something you've made that you're proud of?"
-                required
-              />
-            </div>
-            {#if fields.hackathon.resume.upload.url === ''}
-              <div class="mt-2">
-                <Input
-                  bind:field={fields.hackathon.resume}
-                  type="file"
-                  placeholder="Upload your resume (max 1 MB; 1 page PDF)"
-                  maxSize={1 * 1024 * 1024}
-                  accept={['application/pdf']}
-                  required
-                />
-              </div>
-            {/if}
-          </div>
-          <div class="grid gap-1">
-            <span class="font-bold">Dietary restrictions</span>
-            <div class="grid grid-cols-2">
-              {#each dietaryRestrictionsJson as dietaryRestriction}
-                <Input
-                  type="checkbox"
-                  bind:group={fields.hackathon.dietaryRestrictions}
-                  placeholder={dietaryRestriction.name}
-                />
-              {/each}
-            </div>
-          </div>
-          <div class="grid gap-1">
-            <span class="font-bold">Agreements</span>
-            <div class="grid">
-              <Input
-                type="checkbox"
-                bind:field={fields.agreements.mlhEmails}
-                placeholder="I authorize MLH to send me an email where I can further opt into the MLH Hacker, Events, or
-          Organizer Newsletters and other communications from MLH."
-              />
-            </div>
-          </div>
-        </fieldset>
+          {/each}
+        </div>
       </div>
-    </div>
+      <div class="grid gap-1">
+        <span class="font-bold">Agreements</span>
+        <div class="grid">
+          <Input
+            type="checkbox"
+            bind:field={fields.agreements.mlhEmails}
+            placeholder="I authorize MLH to send me an email where I can further opt into the MLH Hacker, Events, or
+      Organizer Newsletters and other communications from MLH."
+          />
+        </div>
+      </div>
+    </fieldset>
   </div>
 </div>
