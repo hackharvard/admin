@@ -98,9 +98,30 @@ function createDb() {
       })
     })
   }
+  async function loaded() {
+    let unsubscribe
+    const dbData = new Promise(resolve => {
+      unsubscribe = subscribe(dbData => {
+        if (dbData !== undefined) {
+          if (dbData) {
+            resolve(true)
+          } else {
+            resolve(null)
+          }
+        }
+      })
+    })
+    return new Promise(resolve => {
+      dbData.then(result => {
+        unsubscribe()
+        resolve(result)
+      })
+    })
+  }
   return {
     subscribe,
-    get
+    get,
+    loaded
   }
 }
 
