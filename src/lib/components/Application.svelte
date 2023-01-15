@@ -21,6 +21,7 @@
   import Card from '$lib/components/Card.svelte'
 
   export let applicantUid = ''
+  export let updated = function () {}
   let fields = {
     personal: createFields.text(
       'email',
@@ -115,11 +116,12 @@
 
     return output
   }
-  function handleSave() {
+  function handleUpdate() {
     updateDoc(doc($db, 'applications', fields.meta.uid.value), {
       status: serialize.toServer(fields.status)
     })
       .then(() => {
+        updated(fields)
         alert.trigger('success', 'Application decision saved!')
       })
       .catch(err => {
@@ -145,7 +147,7 @@
     </svg>
   </div>
 {:then}
-  <div transition:fade|local={{ duration: 150 }}>
+  <div class="relative" transition:fade|local={{ duration: 150 }}>
     <!-- accept, reject, waitlist buttons -->
     <Card class="sticky top-0 mb-3 z-20">
       <div>
@@ -221,7 +223,7 @@
                 fields.status.accepted.checked = false
                 fields.status.rejected.checked = false
                 fields.status.waitlisted.checked = false
-                handleSave()
+                handleUpdate()
               }}
             >
               Clear decision
@@ -236,7 +238,7 @@
                   fields.status.accepted.checked = true
                   fields.status.rejected.checked = false
                   fields.status.waitlisted.checked = false
-                  handleSave()
+                  handleUpdate()
                 }}
               >
                 <svg
@@ -261,7 +263,7 @@
                   fields.status.accepted.checked = false
                   fields.status.rejected.checked = true
                   fields.status.waitlisted.checked = false
-                  handleSave()
+                  handleUpdate()
                 }}
               >
                 <svg
@@ -286,7 +288,7 @@
                   fields.status.accepted.checked = false
                   fields.status.rejected.checked = false
                   fields.status.waitlisted.checked = true
-                  handleSave()
+                  handleUpdate()
                 }}
               >
                 <svg
@@ -328,7 +330,7 @@
                     message: 'No suggestion available'
                   })
                 }
-                handleSave()
+                handleUpdate()
               }}
             >
               <svg

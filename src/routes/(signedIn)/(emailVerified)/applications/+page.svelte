@@ -6,6 +6,7 @@
   import { alert } from '$lib/stores'
   import { db } from '$lib/firebase'
   import { collection, getDocs } from 'firebase/firestore'
+  import { clickOutside } from '$lib/utils'
 
   // function searchForApplications(query) {
   //   if (codeQuery) {
@@ -84,7 +85,9 @@
   //   currentIndexDisplay = 1
   //   loadApplication(0)
   // }
+  let open = false
   let applicantUids = []
+  let applications = []
   let currentIndex = 0
   $: currentApplicantUid = applicantUids[currentIndex] ?? ''
   onMount(async () => {
@@ -94,6 +97,7 @@
       if (application.meta.submitted.checked) {
         if (application.meta.uid.value === doc.id) {
           applicantUids = [...applicantUids, doc.id]
+          applications = [...applications, application]
         } else {
           alert.trigger(
             'error',
@@ -107,6 +111,16 @@
     // allApplications.sort((a, b) => {
     //   return b.score - a.score
   })
+
+  function handleUpdate(fields) {
+    applications[currentIndex] = fields
+  }
+  function handleKeyDown(e) {
+    if (e.code === 'Escape') {
+      e.preventDefault()
+      open = false
+    }
+  }
   /**i
 
 
@@ -211,9 +225,129 @@
   */
 </script>
 
-<h1 class="font-bold text-5xl md:text-6xl mb-8">Applications</h1>
-<div class="absolute top-28 right-0 px-4 w-full lg:max-w-5xl ">
-  <Card class="h-[calc(100vh-8rem)] overflow-y-auto overflow-hidden p-6">
-    <Application applicantUid={currentApplicantUid} />
-  </Card>
+<svelte:body on:keydown={handleKeyDown} />
+
+<div class="h-[calc(100vh-13.5rem)] overflow-hidden overflow-y-auto">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50 uppercase">
+      <tr>
+        <th class="px-2 py-1 text-left">Status</th>
+        <th class="px-2 py-1 text-left">HHID</th>
+        <th class="px-2 py-1 text-left">Name</th>
+        <th class="px-2 py-1 text-left">Email</th>
+        <th class="px-2 py-1 text-left">Date of birth</th>
+        <th class="px-2 py-1 text-left">Phone number</th>
+        <th class="px-2 py-1 text-left">Current school</th>
+        <th class="px-2 py-1 text-left">Graduation year</th>
+        <th class="px-2 py-1 text-left">Country</th>
+      </tr>
+    </thead>
+    <tbody>
+      {#each applications as application, index}
+        <tr
+          class="hover:cursor-pointer bg-white hover:bg-gray-100 transition-colors duration-300"
+          on:click={() => {
+            currentIndex = index
+            open = true
+          }}
+        >
+          <td class="px-2 py-1 flex justify-center">
+            {#if application.status.accepted.checked}<svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-6 h-6 text-green-600"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            {:else if application.status.rejected.checked}<svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-6 h-6 text-red-600"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            {:else if application.status.waitlisted.checked}<svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-6 h-6 text-yellow-600"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            {:else}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-6 h-6 text-gray-600"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+                />
+              </svg>
+            {/if}
+          </td>
+          <td class="px-2 py-1">{application.meta.hhid.value}</td>
+          <td class="px-2 py-1">
+            {`${application.personal.firstName.value} ${application.personal.lastName.value}`}
+          </td>
+          <td class="px-2 py-1">{application.personal.email.value}</td>
+          <td class="px-2 py-1">{application.personal.dateOfBirth.value}</td>
+          <td class="px-2 py-1">{application.personal.phoneNumber.value}</td>
+          <td class="px-2 py-1">{application.academic.currentSchool.value}</td>
+          <td class="px-2 py-1">{application.academic.graduationYear.value}</td>
+          <td class="px-2 py-1">{application.personal.country.value}</td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+</div>
+<div class="absolute top-28 right-0 px-4 w-full lg:max-w-5xl">
+  {#if open}
+    <div
+      use:clickOutside
+      on:outclick={() => {
+        open = false
+      }}
+    >
+      <Card class="h-[calc(100vh-8rem)] overflow-y-auto overflow-hidden p-6">
+        <Application applicantUid={currentApplicantUid} updated={handleUpdate} />
+        <div class="fixed bottom-10 right-10">
+          <button
+            class="shadow-sm rounded-md bg-gray-100 px-4 py-2 text-gray-900 hover:bg-gray-200 transition-colors duration-300 disabled:text-gray-500 disabled:bg-gray-200"
+            type="button"
+            on:click={() => {
+              open = false
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </Card>
+    </div>
+  {/if}
 </div>
