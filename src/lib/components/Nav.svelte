@@ -28,10 +28,6 @@
     {
       name: 'Applications',
       href: '/applications'
-    },
-    {
-      name: 'Group',
-      href: '/group'
     }
   ]
   function updateShadow() {
