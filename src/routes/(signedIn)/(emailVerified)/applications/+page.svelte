@@ -227,19 +227,21 @@
 
 <svelte:body on:keydown={handleKeyDown} />
 
-<div class="h-[calc(100vh-13.5rem)] overflow-hidden overflow-y-auto">
+<div
+  class="h-[calc(100vh-13.5rem)] overflow-hidden overflow-y-auto overflow-x-auto scrollbar scrollbar-thumb-gray-400 scrollbar-track-gray-100"
+>
   <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-50 uppercase">
       <tr>
-        <th class="px-2 py-1 text-left">Status</th>
-        <th class="px-2 py-1 text-left">HHID</th>
-        <th class="px-2 py-1 text-left">Name</th>
-        <th class="px-2 py-1 text-left">Email</th>
-        <th class="px-2 py-1 text-left">Date of birth</th>
-        <th class="px-2 py-1 text-left">Phone number</th>
-        <th class="px-2 py-1 text-left">Current school</th>
-        <th class="px-2 py-1 text-left">Graduation year</th>
-        <th class="px-2 py-1 text-left">Country</th>
+        <th class="px-2 py-1 text-left whitespace-nowrap">Status</th>
+        <th class="px-2 py-1 text-left whitespace-nowrap">HHID</th>
+        <th class="px-2 py-1 text-left whitespace-nowrap">Name</th>
+        <th class="px-2 py-1 text-left whitespace-nowrap">Email</th>
+        <th class="px-2 py-1 text-left whitespace-nowrap">Date of birth</th>
+        <th class="px-2 py-1 text-left whitespace-nowrap">Phone number</th>
+        <th class="px-2 py-1 text-left whitespace-nowrap">Current school</th>
+        <th class="px-2 py-1 text-left whitespace-nowrap">Graduation year</th>
+        <th class="px-2 py-1 text-left whitespace-nowrap">Country</th>
       </tr>
     </thead>
     <tbody>
@@ -258,7 +260,7 @@
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
                 stroke="currentColor"
-                class="w-6 h-6 text-green-600"
+                class="w-6 h-6 text-green-600 shrink-0"
               >
                 <path
                   stroke-linecap="round"
@@ -272,7 +274,7 @@
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
                 stroke="currentColor"
-                class="w-6 h-6 text-red-600"
+                class="w-6 h-6 text-red-600 shrink-0"
               >
                 <path
                   stroke-linecap="round"
@@ -286,7 +288,7 @@
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
                 stroke="currentColor"
-                class="w-6 h-6 text-yellow-600"
+                class="w-6 h-6 text-yellow-600 shrink-0"
               >
                 <path
                   stroke-linecap="round"
@@ -301,7 +303,7 @@
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
                 stroke="currentColor"
-                class="w-6 h-6 text-gray-600"
+                class="w-6 h-6 text-gray-600 shrink-0"
               >
                 <path
                   stroke-linecap="round"
@@ -311,16 +313,16 @@
               </svg>
             {/if}
           </td>
-          <td class="px-2 py-1">{application.meta.hhid.value}</td>
-          <td class="px-2 py-1">
+          <td class="px-2 py-1 whitespace-nowrap">{application.meta.hhid.value}</td>
+          <td class="px-2 py-1 whitespace-nowrap">
             {`${application.personal.firstName.value} ${application.personal.lastName.value}`}
           </td>
-          <td class="px-2 py-1">{application.personal.email.value}</td>
-          <td class="px-2 py-1">{application.personal.dateOfBirth.value}</td>
-          <td class="px-2 py-1">{application.personal.phoneNumber.value}</td>
-          <td class="px-2 py-1">{application.academic.currentSchool.value}</td>
-          <td class="px-2 py-1">{application.academic.graduationYear.value}</td>
-          <td class="px-2 py-1">{application.personal.country.value}</td>
+          <td class="px-2 py-1 whitespace-nowrap">{application.personal.email.value}</td>
+          <td class="px-2 py-1 whitespace-nowrap">{application.personal.dateOfBirth.value}</td>
+          <td class="px-2 py-1 whitespace-nowrap">{application.personal.phoneNumber.value}</td>
+          <td class="px-2 py-1 whitespace-nowrap">{application.academic.currentSchool.value}</td>
+          <td class="px-2 py-1 whitespace-nowrap">{application.academic.graduationYear.value}</td>
+          <td class="px-2 py-1 whitespace-nowrap">{application.personal.country.value}</td>
         </tr>
       {/each}
     </tbody>
