@@ -64,7 +64,6 @@
               const application = res.data()
               fields = serialize.fromServer(application)
               suggestion = calculateSuggestion(fields)
-              console.log(suggestion)
               resolve()
             } else {
               alert.trigger('error', 'Application not found.', false)
@@ -150,12 +149,12 @@
   <div class="relative" transition:fade|local={{ duration: 150 }}>
     <!-- accept, reject, waitlist buttons -->
     <Card class="sticky top-0 mb-3 z-20">
-      <div>
+      <div class="overflow-hidden overflow-x-auto">
         {#if fields.status.accepted.checked || fields.status.rejected.checked || fields.status.waitlisted.checked}
-          <div class="flex items-center justify-between">
+          <div class="flex items-center sm:justify-between gap-4">
             <div
               class={classNames(
-                'flex items-center gap-1 shadow-sm rounded-md px-4 py-2 ',
+                'flex items-center gap-1 shadow-sm rounded-md px-4 py-2 whitespace-nowrap',
                 fields.status.accepted.checked && 'bg-green-100 text-green-900',
                 fields.status.rejected.checked && 'bg-red-100 text-red-900',
                 fields.status.waitlisted.checked && 'bg-yellow-100 text-yellow-900'
@@ -218,7 +217,7 @@
               </span>
             </div>
             <button
-              class="uppercase text-sm shadow-sm rounded-md bg-gray-100 px-2 h-8 text-gray-900 hover:bg-gray-200 transition-colors duration-300 disabled:text-gray-500 disabled:bg-gray-200"
+              class="whitespace-nowrap uppercase text-sm shadow-sm rounded-md bg-gray-100 px-2 h-8 text-gray-900 hover:bg-gray-200 transition-colors duration-300 disabled:text-gray-500 disabled:bg-gray-200"
               on:click={() => {
                 fields.status.accepted.checked = false
                 fields.status.rejected.checked = false
@@ -230,7 +229,7 @@
             </button>
           </div>
         {:else}
-          <div class="flex items-center justify-between">
+          <div class="flex items-center lg:justify-between gap-4">
             <div class="flex items-center gap-4">
               <button
                 class="flex items-center gap-1 shadow-sm rounded-md bg-green-100 px-4 py-2 text-green-900 hover:bg-green-200 transition-colors duration-300 disabled:text-green-500 disabled:bg-green-200"
@@ -309,7 +308,7 @@
               </button>
             </div>
             <button
-              class="uppercase font-bold hidden lg:flex items-center gap-1 shadow-sm rounded-md bg-gray-100 px-4 py-2 text-gray-900 hover:bg-gray-200 transition-colors duration-300 disabled:text-gray-500 disabled:bg-gray-200"
+              class="whitespace-nowrap uppercase font-bold flex items-center gap-1 shadow-sm rounded-md bg-gray-100 px-4 py-2 text-gray-900 hover:bg-gray-200 transition-colors duration-300 disabled:text-gray-500 disabled:bg-gray-200"
               type="button"
               on:click={() => {
                 if (suggestion.decision === 'accept') {
@@ -325,10 +324,13 @@
                   fields.status.rejected.checked = false
                   fields.status.waitlisted.checked = true
                 } else {
-                  alert.trigger({
-                    type: 'error',
-                    message: 'No suggestion available'
-                  })
+                  alert.trigger(
+                    {
+                      type: 'error',
+                      message: 'No suggestion available.'
+                    },
+                    false
+                  )
                 }
                 handleUpdate()
               }}
