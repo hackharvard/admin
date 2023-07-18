@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store'
-import { errorsJson } from '$lib/data'
+// import { errorsJson } from '$lib/data'
 
 function createAlert() {
   const alert = writable({
@@ -11,10 +11,10 @@ function createAlert() {
       if (auto) {
         let str = ''
         message =
-          errorsJson[message] ??
+          // errorsJson[message] ??
           (str = message.split('/')[1].split('-').join(' ')).charAt(0).toUpperCase() +
-            str.slice(1) +
-            '.'
+          str.slice(1) +
+          '.'
       }
       alert.set({
         type,

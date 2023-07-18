@@ -1,110 +1,128 @@
 <script>
   import { classNames } from '$lib/utils'
-  import { uniqueId, kebabCase } from 'lodash-es'
-  import { fieldsJson } from '$lib/data'
-  import { alert } from '$lib/stores'
+  import { uniqueId, kebabCase, isUndefined, isArray, isBoolean } from 'lodash'
 
-  export let self
-  export let type = 'text'
-  export let field = fieldsJson[type]
-  export let placeholder = ''
-  export let name = kebabCase(placeholder)
-  export let floating = false
-  export let group = null
-  export let maxSize = 0
-  export let accept = []
-  export let required = false
   let className = ''
   export { className as class }
 
-  const id = uniqueId('input-')
+  export let self = undefined
+  export let id = uniqueId('input-')
+  export let type = 'text'
+  export let value
+  export let placeholder = ''
+  export let name = kebabCase(placeholder)
+  export let required = false
+  export let floating = false
+  export let validation = []
+  export let focus = false
+
+  // if file input
+  export let accept = undefined
+  export let maxSize = 0
+  $: if (self) {
+    if (focus) {
+      self.focus()
+    }
+  }
+  $: {
+    if (self) {
+      const state = [
+        [
+          !(
+            required &&
+            (value === '' ||
+              (self.files instanceof FileList && self.files.length === 0) ||
+              (type === 'checkbox' && isArray(value) && value.length === 0))
+          ),
+          'Please fill required fields.'
+        ],
+        ...(type === 'file' ? [[!(value?.size > maxSize), 'File exceeds maximum size.']] : []),
+        ...validation
+      ].find(state => !state[0])
+      self.setCustomValidity(isUndefined(state) ? '' : state[1])
+    }
+  }
+
   function handleInput(e) {
-    if (type === 'checkbox') {
-      if (group) {
-        if (e.target.checked) {
-          group.value = [name, ...group.value]
+    if (e.target instanceof HTMLInputElement) {
+      if (type === 'checkbox') {
+        if (isArray(value)) {
+          if (e.target.checked) {
+            value = [name, ...value]
+          } else {
+            value = value.filter(item => item !== name)
+          }
         } else {
-          group.value = group.value.filter(item => item !== name)
+          value = e.target.checked
         }
+      } else if (type === 'number' || type === 'range') {
+        value = +e.target.value
+      } else if (
+        type === 'file' &&
+        e.target.files instanceof FileList &&
+        e.target.files[0] instanceof File
+      ) {
+        value = e.target.files[0]
       } else {
-        field.checked = e.target.checked
+        value = e.target.value
       }
-    } else if (type === 'number' || type === 'range') {
-      field.value = +e.target.value
-    } else if (type === 'file') {
-      field.value = e.target.files[0]
-      if (field.value?.size > maxSize) {
-        self.setCustomValidity(' ')
-        alert.trigger('error', 'File exceeds maximum size.', false)
-      } else {
-        self.setCustomValidity('')
-      }
-    } else {
-      field.value = e.target.value
     }
   }
 </script>
 
-<div class="mt-2">
-  {#if type === 'checkbox'}
-    {#if group}
-      <div class="flex mt-2">
-        <input
-          class={classNames(
-            'cursor-pointer mt-0.5 shrink-0 appearance-none w-5 h-5 rounded-md border border-gray-300 focus:outline-none focus:border-gray-600 checked:bg-gray-600 checked:border-gray-600 peer disabled:checked:bg-gray-400 disabled:checked:border-gray-400 disabled:cursor-default',
-            field.error
-              ? 'border-red-300 focus:border-red-600'
-              : 'border-gray-300 focus:border-gray-600',
-            className
-          )}
-          type="checkbox"
-          checked={group.value.includes(name)}
-          bind:this={self}
-          on:input={handleInput}
-          {id}
-          {name}
-          {required}
-          {...$$restProps}
-        />
-        <label
-          for={id}
-          class="ml-3 text-gray-900 cursor-pointer peer-disabled:text-gray-400 peer-disabled:cursor-default"
-        >
-          <span>
-            {placeholder}<span class="text-red-500">*</span>
-          </span>
-        </label>
-      </div>
-    {:else}
-      <div class="flex mt-2">
-        <input
-          class={classNames(
-            'cursor-pointer mt-0.5 shrink-0 appearance-none w-5 h-5 rounded-md border border-gray-300 focus:outline-none focus:border-gray-600 checked:bg-gray-600 checked:border-gray-600 peer disabled:checked:bg-gray-400 disabled:checked:border-gray-400 disabled:cursor-default',
-            field.error
-              ? 'border-red-300 focus:border-red-600'
-              : 'border-gray-300 focus:border-gray-600',
-            className
-          )}
-          type="checkbox"
-          checked={field.checked}
-          bind:this={self}
-          on:input={handleInput}
-          {id}
-          {name}
-          {required}
-          {...$$restProps}
-        />
-        <label
-          for={id}
-          class="ml-3 text-gray-900 cursor-pointer peer-disabled:text-gray-400 peer-disabled:cursor-default"
-        >
-          <span>
-            {placeholder}<span class="text-red-500">*</span>
-          </span>
-        </label>
-      </div>
-    {/if}
-  {:else if type === 'file'}
+{#if type === 'checkbox'}
+  {#if isArray(value)}
+    <div class="mt-2 flex">
+      <input
+        class={classNames(
+          'peer mt-0.5 h-5 w-5 shrink-0 cursor-pointer appearance-none rounded-md border border-gray-300 checked:border-gray-600 checked:bg-gray-600 focus:border-gray-600 focus:outline-none disabled:cursor-default disabled:checked:border-gray-400 disabled:checked:bg-gray-400',
+          className
+        )}
+        type="checkbox"
+        checked={value.includes(name)}
+        bind:this={self}
+        on:input={handleInput}
+        {id}
+        {name}
+        {...$$restProps}
+      />
+      <label
+        for={id}
+        class="ml-2 cursor-pointer text-gray-900 peer-disabled:cursor-default peer-disabled:text-gray-400"
+      >
+        <span>
+          {placeholder}
+        </span>
+      </label>
+    </div>
+  {:else}
+    <div class="mt-2 flex">
+      <input
+        class={classNames(
+          'peer mt-0.5 h-5 w-5 shrink-0 cursor-pointer appearance-none rounded-md border border-gray-300 checked:border-gray-600 checked:bg-gray-600 focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 focus:ring-offset-1 disabled:cursor-default disabled:checked:border-gray-400 disabled:checked:bg-gray-400',
+          className
+        )}
+        type="checkbox"
+        checked={isBoolean(value) && value}
+        bind:this={self}
+        on:input={handleInput}
+        {id}
+        {name}
+        {required}
+        {...$$restProps}
+      />
+      <label
+        for={id}
+        class="ml-2 cursor-pointer text-gray-900 peer-disabled:cursor-default peer-disabled:text-gray-400"
+      >
+        <span>
+          {placeholder}<span class="text-red-500">*</span>
+        </span>
+      </label>
+    </div>
+  {/if}
+{:else if type === 'file'}
+  <div class="mt-2">
     <label for={id}>
       <span>
         {placeholder}<span class="text-red-500">*</span>
@@ -112,14 +130,11 @@
     </label>
     <input
       class={classNames(
-        'cursor-pointer file:cursor-pointer mt-2 appearance-none block h-12 w-full transition-colors text-gray-900 rounded-md border border-gray-300 focus:outline-none focus:border-gray-600 placeholder:text-gray-500 disabled:bg-white disabled:text-gray-400 disabled:placeholder:text-gray-400 file:bg-gray-700 file:text-white file:h-full file:border-none file:px-4 file:mr-4',
-        field.error
-          ? 'border-red-300 focus:border-red-600'
-          : 'border-gray-300 focus:border-gray-600',
+        'mt-2 block h-12 w-full cursor-pointer appearance-none rounded-md border border-gray-300 text-gray-900 transition-colors file:mr-4 file:h-full file:cursor-pointer file:border-none file:bg-gray-700 file:px-4 file:text-white placeholder:text-gray-500 focus:border-gray-600 focus:outline-none disabled:bg-white disabled:text-gray-400 disabled:placeholder:text-gray-400',
         className
       )}
       type="file"
-      accept={accept.join(',')}
+      accept={isUndefined(accept) ? '' : accept.join(',')}
       bind:this={self}
       on:input={handleInput}
       {id}
@@ -127,36 +142,35 @@
       {required}
       {...$$restProps}
     />
-  {:else if floating}
-    <div class="relative">
-      <input
-        class={classNames(
-          'appearance-none block px-3 pt-1 h-12 w-full transition-colors text-gray-900 rounded-md border focus:outline-none peer disabled:bg-white disabled:text-gray-400',
-          field.error
-            ? 'border-red-300 focus:border-red-600'
-            : 'border-gray-300 focus:border-gray-600',
-          className
-        )}
-        placeholder=" "
-        value={field.value}
-        bind:this={self}
-        on:input={handleInput}
-        {type}
-        {id}
-        {name}
-        {required}
-        {...$$restProps}
-      />
-      <label
-        class="cursor-text absolute text-gray-500 duration-150 transform -translate-y-4 top-[0.65rem] left-1 text-[0.8rem] leading-none z-10 origin-[0%_0%] bg-white px-2 peer-focus:-translate-y-4 peer-focus:top-[0.65rem] peer-focus:left-1 peer-focus:text-[0.8rem] peer-focus:leading-none peer-placeholder-shown:text-base peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2"
-        for={id}
-      >
-        <span>
-          {placeholder}<span class="text-red-500">*</span>
-        </span>
-      </label>
-    </div>
-  {:else}
+  </div>
+{:else if floating}
+  <div class="relative mt-2 grow">
+    <input
+      class={classNames(
+        'peer block h-12 w-full appearance-none rounded-md border border-gray-300 px-3 pt-1 text-gray-900 transition-colors focus:border-gray-600 focus:outline-none disabled:bg-white disabled:text-gray-400',
+        className
+      )}
+      placeholder=" "
+      bind:this={self}
+      on:input={handleInput}
+      {value}
+      {type}
+      {id}
+      {name}
+      {required}
+      {...$$restProps}
+    />
+    <label
+      class="absolute left-1 top-[0.65rem] z-10 origin-[0%_0%] -translate-y-4 transform cursor-text bg-white px-2 text-[0.8rem] leading-none text-gray-500 duration-150 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-placeholder-shown:text-base peer-focus:left-1 peer-focus:top-[0.65rem] peer-focus:-translate-y-4 peer-focus:text-[0.8rem] peer-focus:leading-none peer-disabled:text-gray-400"
+      for={id}
+    >
+      <span>
+        {placeholder}<span class="text-red-500">*</span>
+      </span>
+    </label>
+  </div>
+{:else}
+  <div class="mt-2">
     <label for={id}>
       <span>
         {placeholder}<span class={classNames('text-red-500', !required && 'hidden')}>*</span>
@@ -164,24 +178,20 @@
     </label>
     <input
       class={classNames(
-        'appearance-none block px-3 h-12 w-full transition-colors text-gray-900 rounded-md border border-gray-300 focus:outline-none focus:border-gray-600 placeholder:text-gray-500 disabled:bg-white disabled:text-gray-400 disabled:placeholder:text-gray-400',
-        field.error
-          ? 'border-red-300 focus:border-red-600'
-          : 'border-gray-300 focus:border-gray-600',
+        'mt-1 block h-12 w-full appearance-none rounded-md border border-gray-300 px-3 text-gray-900 transition-colors placeholder:text-gray-500 focus:border-gray-600 focus:outline-none disabled:bg-white disabled:text-gray-400 disabled:placeholder:text-gray-400',
         className
       )}
-      value={field.value}
       bind:this={self}
       on:input={handleInput}
+      {value}
       {type}
       {id}
       {name}
-      {placeholder}
       {required}
       {...$$restProps}
     />
-  {/if}
-</div>
+  </div>
+{/if}
 
 <style>
   input:checked {

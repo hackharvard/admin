@@ -93,9 +93,10 @@
   onMount(async () => {
     const snapshot = await getDocs(collection($db, 'applications'))
     snapshot.forEach(doc => {
-      const application = serialize.fromServer(doc.data())
-      if (application.meta.submitted.checked) {
-        if (application.meta.uid.value === doc.id) {
+      // const application = serialize.fromServer(doc.data())
+      const application = doc.data()
+      if (application.meta.submitted) {
+        if (application.meta.uid === doc.id) {
           applicantUids = [...applicantUids, doc.id]
           applications = [...applications, application]
         } else {
@@ -237,11 +238,11 @@
         <th class="px-2 py-1 text-left whitespace-nowrap">HHID</th>
         <th class="px-2 py-1 text-left whitespace-nowrap">Name</th>
         <th class="px-2 py-1 text-left whitespace-nowrap">Email</th>
-        <th class="px-2 py-1 text-left whitespace-nowrap">Date of birth</th>
+        <th class="px-2 py-1 text-left whitespace-nowrap">Age</th>
         <th class="px-2 py-1 text-left whitespace-nowrap">Phone number</th>
         <th class="px-2 py-1 text-left whitespace-nowrap">Current school</th>
         <th class="px-2 py-1 text-left whitespace-nowrap">Graduation year</th>
-        <th class="px-2 py-1 text-left whitespace-nowrap">Country</th>
+        <th class="px-2 py-1 text-left whitespace-nowrap">Country of residence</th>
       </tr>
     </thead>
     <tbody>
@@ -254,7 +255,7 @@
           }}
         >
           <td class="px-2 py-1 flex justify-center">
-            {#if application.status.accepted.checked}<svg
+            {#if application.status.accepted}<svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -268,7 +269,7 @@
                   d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-            {:else if application.status.rejected.checked}<svg
+            {:else if application.status.rejected}<svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -282,7 +283,7 @@
                   d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-            {:else if application.status.waitlisted.checked}<svg
+            {:else if application.status.waitlisted}<svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -313,16 +314,16 @@
               </svg>
             {/if}
           </td>
-          <td class="px-2 py-1 whitespace-nowrap">{application.meta.hhid.value}</td>
+          <td class="px-2 py-1 whitespace-nowrap">{application.meta.hhid}</td>
           <td class="px-2 py-1 whitespace-nowrap">
-            {`${application.personal.firstName.value} ${application.personal.lastName.value}`}
+            {`${application.personal.firstName} ${application.personal.lastName}`}
           </td>
-          <td class="px-2 py-1 whitespace-nowrap">{application.personal.email.value}</td>
-          <td class="px-2 py-1 whitespace-nowrap">{application.personal.dateOfBirth.value}</td>
-          <td class="px-2 py-1 whitespace-nowrap">{application.personal.phoneNumber.value}</td>
-          <td class="px-2 py-1 whitespace-nowrap">{application.academic.currentSchool.value}</td>
-          <td class="px-2 py-1 whitespace-nowrap">{application.academic.graduationYear.value}</td>
-          <td class="px-2 py-1 whitespace-nowrap">{application.personal.country.value}</td>
+          <td class="px-2 py-1 whitespace-nowrap">{application.personal.email}</td>
+          <td class="px-2 py-1 whitespace-nowrap">{application.personal.age}</td>
+          <td class="px-2 py-1 whitespace-nowrap">{application.personal.phoneNumber}</td>
+          <td class="px-2 py-1 whitespace-nowrap">{application.academic.currentSchool}</td>
+          <td class="px-2 py-1 whitespace-nowrap">{application.academic.graduationYear}</td>
+          <td class="px-2 py-1 whitespace-nowrap">{application.personal.countryOfResidence}</td>
         </tr>
       {/each}
     </tbody>

@@ -11,23 +11,24 @@
   let disabled = false
   let showValidation = false
   let fields = {
-    default: createFields.text('email', 'password')
+    email: '',
+    password: ''
   }
   function handleSubmit() {
+    console.log(fields)
     showValidation = true
     if (isValid(formEl)) {
       disabled = true
       auth
-        .signIn(fields.default.email.value, fields.default.password.value)
+        .signIn(fields.email, fields.password)
         .then(async () => {
           fields = disableErrors.allSections(fields)
           await user.loaded()
           goto('/')
         })
         .catch(err => {
-          fields = enableErrors.allSections(fields)
           disabled = false
-          alert.trigger('error', err.code)
+          alert.trigger('error', err.code, true)
         })
     }
   }
@@ -42,10 +43,10 @@
   <fieldset class="grid gap-2" {disabled}>
     <Brand />
     <h1 class="text-2xl mt-1 font-bold">Sign in</h1>
-    <Input type="email" bind:field={fields.default.email} placeholder="Email" floating required />
+    <Input type="email" bind:value={fields.email} placeholder="Email" floating required />
     <Input
       type="password"
-      bind:field={fields.default.password}
+      bind:value={fields.password}
       placeholder="Password"
       floating
       required

@@ -1,36 +1,36 @@
 import { cloneDeep } from 'lodash-es'
-import { fieldsJson } from '$lib/data'
+// import { fieldsJson } from '$lib/data'
 
-export const createFields = {
-  text: (...fieldNames) => {
-    const fieldSection = {}
-    fieldNames.forEach(fieldName => {
-      fieldSection[fieldName] = cloneDeep(fieldsJson.text)
-    })
-    return fieldSection
-  },
-  file: (...fieldNames) => {
-    const fieldSection = {}
-    fieldNames.forEach(fieldName => {
-      fieldSection[fieldName] = cloneDeep(fieldsJson.file)
-    })
-    return fieldSection
-  },
-  checkbox: (...fieldNames) => {
-    const fieldSection = {}
-    fieldNames.forEach(fieldName => {
-      fieldSection[fieldName] = cloneDeep(fieldsJson.checkbox)
-    })
-    return fieldSection
-  },
-  group: (...fieldNames) => {
-    const fieldSection = {}
-    fieldNames.forEach(fieldName => {
-      fieldSection[fieldName] = cloneDeep(fieldsJson.group)
-    })
-    return fieldSection
-  }
-}
+// export const createFields = {
+//   text: (...fieldNames) => {
+//     const fieldSection = {}
+//     fieldNames.forEach(fieldName => {
+//       fieldSection[fieldName] = cloneDeep(fieldsJson.text)
+//     })
+//     return fieldSection
+//   },
+//   file: (...fieldNames) => {
+//     const fieldSection = {}
+//     fieldNames.forEach(fieldName => {
+//       fieldSection[fieldName] = cloneDeep(fieldsJson.file)
+//     })
+//     return fieldSection
+//   },
+//   checkbox: (...fieldNames) => {
+//     const fieldSection = {}
+//     fieldNames.forEach(fieldName => {
+//       fieldSection[fieldName] = cloneDeep(fieldsJson.checkbox)
+//     })
+//     return fieldSection
+//   },
+//   group: (...fieldNames) => {
+//     const fieldSection = {}
+//     fieldNames.forEach(fieldName => {
+//       fieldSection[fieldName] = cloneDeep(fieldsJson.group)
+//     })
+//     return fieldSection
+//   }
+// }
 
 export const serialize = {
   toServer: fields => {
@@ -75,27 +75,27 @@ export const serialize = {
   }
 }
 
-export const clearFields = {
-  allSections: fields => {
-    fields = cloneDeep(fields)
-    Object.keys(fields).forEach(section => {
-      Object.keys(fields[section]).forEach(fieldName => {
-        fields[section][fieldName] = cloneDeep(fieldsJson[fields[section][fieldName].type])
-      })
-    })
-    return fields
-  },
-  atSection: (fieldSection, ...fieldNames) => {
-    fieldSection = cloneDeep(fieldSection)
-    if (fieldNames.length === 0) {
-      fieldNames = Object.keys(fieldSection)
-    }
-    fieldNames.forEach(fieldName => {
-      fieldSection[fieldName] = cloneDeep(fieldsJson[fieldSection[fieldName].type])
-    })
-    return fieldSection
-  }
-}
+// export const clearFields = {
+//   allSections: fields => {
+//     fields = cloneDeep(fields)
+//     Object.keys(fields).forEach(section => {
+//       Object.keys(fields[section]).forEach(fieldName => {
+//         fields[section][fieldName] = cloneDeep(fieldsJson[fields[section][fieldName].type])
+//       })
+//     })
+//     return fields
+//   },
+//   atSection: (fieldSection, ...fieldNames) => {
+//     fieldSection = cloneDeep(fieldSection)
+//     if (fieldNames.length === 0) {
+//       fieldNames = Object.keys(fieldSection)
+//     }
+//     fieldNames.forEach(fieldName => {
+//       fieldSection[fieldName] = cloneDeep(fieldsJson[fieldSection[fieldName].type])
+//     })
+//     return fieldSection
+//   }
+// }
 
 export const enableErrors = {
   allSections: fields => {

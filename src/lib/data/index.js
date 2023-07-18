@@ -1,16 +1,18 @@
-import racesEthnicitiesJson from './racesEthnicities.json'
 import gendersJson from './genders.json'
 import schoolsJson from './schools.json'
 import worldJson from './world.json'
 import shirtSizeJson from './shirtSizes.json'
 import dietaryRestrictionsJson from './dietaryRestrictions.json'
-import errorsJson from './errors.json'
 import reasonsJson from './reasons.json'
 import statesJson from './states.json'
-import fieldsJson from './fields.json'
+import rolesJson from './roles.json'
+import prolangsJson from './prolangs.json'
+import raceJson from './race.json'
+import majorJson from './major.json'
+import experienceJson from './experience.json'
+import levelOfStudyJson from './levelOfStudy.json'
 
 export {
-  racesEthnicitiesJson,
   gendersJson,
   schoolsJson,
   worldJson,
@@ -18,6 +20,10 @@ export {
   dietaryRestrictionsJson,
   reasonsJson,
   statesJson,
-  errorsJson,
-  fieldsJson
+  rolesJson,
+  prolangsJson,
+  raceJson,
+  majorJson,
+  experienceJson,
+  levelOfStudyJson
 }
