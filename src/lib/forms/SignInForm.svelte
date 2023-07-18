@@ -1,7 +1,7 @@
 <script>
   import Input from '$lib/components/Input.svelte'
   import { classNames } from '$lib/utils'
-  import { createFields, enableErrors, disableErrors, isValid } from '$lib/forms'
+  import { enableErrors, disableErrors, isValid } from '$lib/forms'
   import { auth, user } from '$lib/firebase'
   import { alert } from '$lib/stores'
   import Brand from '$lib/components/Brand.svelte'
@@ -22,7 +22,6 @@
       auth
         .signIn(fields.email, fields.password)
         .then(async () => {
-          fields = disableErrors.allSections(fields)
           await user.loaded()
           goto('/')
         })
@@ -54,8 +53,18 @@
     />
     <div class="flex items-center justify-between mt-2">
       <div class="flex flex-col gap-1">
-        <a class="link" href="/reset-password">Forgot password?</a>
-        <a class="link" href="/signup">Need to sign up?</a>
+        <a
+          class="link"
+          href="https://portal.hackharvard.io"
+          target="_blank"
+          rel="noopener noreferrer">Forgot password?</a
+        >
+        <a
+          class="link"
+          href="https://portal.hackharvard.io"
+          target="_blank"
+          rel="noopener noreferrer">Need to sign up?</a
+        >
       </div>
       <button
         class="shadow-sm rounded-md bg-blue-100 px-4 py-2 text-blue-900 hover:bg-blue-200 transition-colors duration-300 disabled:text-blue-500 disabled:bg-blue-200"

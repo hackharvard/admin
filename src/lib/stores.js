@@ -1,20 +1,17 @@
 import { writable } from 'svelte/store'
-// import { errorsJson } from '$lib/data'
+import { capitalize, lowerCase } from 'lodash'
 
 function createAlert() {
   const alert = writable({
     type: '',
     message: ''
   })
-  function trigger(type, message, auto = true) {
+  function trigger(type, message, auto = false) {
     if (type === 'error') {
       if (auto) {
-        let str = ''
-        message =
-          // errorsJson[message] ??
-          (str = message.split('/')[1].split('-').join(' ')).charAt(0).toUpperCase() +
-          str.slice(1) +
-          '.'
+        message = `${capitalize(
+          lowerCase(message.includes('/') ? message.split('/')[1] : message)
+        )}.`
       }
       alert.set({
         type,

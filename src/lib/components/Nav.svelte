@@ -1,5 +1,4 @@
 <script>
-  import ProfileMenu from './ProfileMenu.svelte'
   import { classNames } from '$lib/utils'
   import { page } from '$app/stores'
   import { onMount } from 'svelte'
@@ -64,7 +63,6 @@
     {#if emailVerified}
       <AnnouncementsBell />
     {/if}
-    <ProfileMenu class="hidden sm:block" />
     <button
       class="sm:hidden"
       type="button"
@@ -114,8 +112,5 @@
         {page.name}
       </a>
     {/each}
-    <div class="mt-dynamic">
-      <ProfileMenu />
-    </div>
   </div>
 {/if}
