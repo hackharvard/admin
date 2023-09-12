@@ -13,7 +13,6 @@ export const load = (async ({ url, depends }) => {
         .collection('applications')
         .where('meta.submitted', '==', true)
         .orderBy('timestamps.updated')
-        .limit(25)
         .get()
       const decisions = (
         await Promise.all(

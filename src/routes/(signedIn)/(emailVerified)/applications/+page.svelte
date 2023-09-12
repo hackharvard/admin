@@ -12,12 +12,18 @@
   import { actions, alert } from '$lib/stores'
   import { db } from '$lib/client/firebase'
   import { doc, setDoc, updateDoc } from 'firebase/firestore'
+  import { isNull } from 'lodash-es'
 
   export let data: PageData
   let dialogEl: Dialog
   let search: string = data.query ?? ''
   let current: number | undefined
   let checked: Array<number> = []
+  let decisionFilter: Data.Decision | 'all' | 'none' = 'all'
+  function handleDecisionFilterChange(event: Event) {
+    const target = event.target as HTMLSelectElement
+    decisionFilter = target.value as Data.Decision | 'all' | 'none'
+  }
   $: if (checked.length > 0) {
     actions.set([
       createDecisionAction('accepted'),
@@ -149,6 +155,20 @@
       <Button class="uppercase px-2 py-1" on:click={handleClear}>Clear</Button>
     </div>
   </div>
+  <div class="relative">
+    <select
+      class="border border-gray-400 rounded-lg p-2 h-12"
+      bind:value={decisionFilter}
+      on:change={handleDecisionFilterChange}
+    >
+      <option value="all">All</option>
+      <option value="accepted">Accepted</option>
+      <option value="waitlisted">Waitlisted</option>
+      <option value="rejected">Rejected</option>
+      <option value="none">No Decision</option>
+    </select>
+  </div>
+
   <Button
     class="shrink-0 h-12 w-12 p-0 flex items-center justify-center"
     type="submit"
@@ -196,169 +216,172 @@
   </svelte:fragment>
   <svelte:fragment slot="body">
     {#each data.applications as application, i}
-      <tr
-        class="bg-white border-b hover:bg-gray-50 hover:cursor-pointer"
-        on:click={() => {
-          current = i
-          dialogEl.open()
-        }}
-      >
-        <td class="w-4 p-4">
-          <div class="flex items-center">
-            <input
-              id={`check-${i}`}
-              class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-400 checked:border-gray-600 checked:bg-gray-600 focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 focus:ring-offset-1 disabled:cursor-default disabled:checked:border-gray-400 disabled:checked:bg-gray-400"
-              type="checkbox"
-              checked={checked.includes(i)}
-              on:input={(e) => handleCheck(e, i)}
-              on:click|stopPropagation
-            />
-            <label for="check-all" class="sr-only">checkbox</label>
-          </div>
-        </td>
-        <td class="px-6 py-4">
-          {#if application.values.meta.submitted}
-            {format(application.values.timestamps.updated, 'yyyy.MM.dd p')}
-          {:else}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="w-5 h-5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M6 18L18 6M6 6l12 12"
+      {#if decisionFilter === 'all' || (decisionFilter === 'none' && application.values.meta.decision !== 'accepted' && application.values.meta.decision !== 'waitlisted' && application.values.meta.decision !== 'rejected') || application.values.meta.decision === decisionFilter}
+        <tr
+          class="bg-white border-b hover:bg-gray-50 hover:cursor-pointer"
+          on:click={() => {
+            current = i
+            dialogEl.open()
+          }}
+        >
+          <td class="w-4 p-4">
+            <div class="flex items-center">
+              <input
+                id={`check-${i}`}
+                class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-400 checked:border-gray-600 checked:bg-gray-600 focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 focus:ring-offset-1 disabled:cursor-default disabled:checked:border-gray-400 disabled:checked:bg-gray-400"
+                type="checkbox"
+                checked={checked.includes(i)}
+                on:input={(e) => handleCheck(e, i)}
+                on:click|stopPropagation
               />
-            </svg>
-          {/if}
-        </td>
-        <td class="px-6 py-4">
-          {#if application.values.meta.decision}
-            {#if application.values.meta.decision === 'accepted'}
+              <label for="check-all" class="sr-only">checkbox</label>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            {#if application.values.meta.submitted}
+              {format(application.values.timestamps.updated, 'yyyy.MM.dd p')}
+            {:else}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                class="w-5 h-5 text-green-300"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-5 h-5"
               >
                 <path
-                  fill-rule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            {:else if application.values.meta.decision === 'waitlisted'}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                class="w-5 h-5 text-yellow-300"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            {:else if application.values.meta.decision === 'rejected'}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                class="w-5 h-5 text-red-300"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
-                  clip-rule="evenodd"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
             {/if}
-          {:else}
-            None
-          {/if}
-        </td>
-        <th
-          scope="row"
-          class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
-        >
-          {`${application.values.personal.firstName} ${application.values.personal.lastName}`}
-        </th>
-        <td class="px-6 py-4"> {application.values.personal.email} </td>
-        <td class="px-6 py-4"> {application.values.personal.age} </td>
-        <td class="px-6 py-4">{application.values.personal.underrepresented}</td
-        >
-        <td class="px-6 py-4">
-          {#if application.values.academic.enrolled}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="w-5 h-5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M4.5 12.75l6 6 9-13.5"
-              />
-            </svg>
-          {:else}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="w-5 h-5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          {/if}
-        </td>
-        <td class="px-6 py-4">
-          {#if application.values.academic.affiliated}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="w-5 h-5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M4.5 12.75l6 6 9-13.5"
-              />
-            </svg>
-          {:else}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="w-5 h-5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          {/if}
-        </td>
-      </tr>
+          </td>
+          <td class="px-6 py-4">
+            {#if application.values.meta.decision}
+              {#if application.values.meta.decision === 'accepted'}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  class="w-5 h-5 text-green-300"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              {:else if application.values.meta.decision === 'waitlisted'}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  class="w-5 h-5 text-yellow-300"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              {:else if application.values.meta.decision === 'rejected'}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  class="w-5 h-5 text-red-300"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              {/if}
+            {:else}
+              None
+            {/if}
+          </td>
+          <th
+            scope="row"
+            class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+          >
+            {`${application.values.personal.firstName} ${application.values.personal.lastName}`}
+          </th>
+          <td class="px-6 py-4"> {application.values.personal.email} </td>
+          <td class="px-6 py-4"> {application.values.personal.age} </td>
+          <td class="px-6 py-4"
+            >{application.values.personal.underrepresented}</td
+          >
+          <td class="px-6 py-4">
+            {#if application.values.academic.enrolled}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-5 h-5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M4.5 12.75l6 6 9-13.5"
+                />
+              </svg>
+            {:else}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-5 h-5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            {/if}
+          </td>
+          <td class="px-6 py-4">
+            {#if application.values.academic.affiliated}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-5 h-5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M4.5 12.75l6 6 9-13.5"
+                />
+              </svg>
+            {:else}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-5 h-5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            {/if}
+          </td>
+        </tr>
+      {/if}
     {/each}
   </svelte:fragment>
 </Table>
@@ -371,5 +394,9 @@
     background-size: 100% 100%;
     background-repeat: no-repeat;
     background-position: center;
+  }
+  select.custom-select:focus {
+    outline: none;
+    box-shadow: none;
   }
 </style>
