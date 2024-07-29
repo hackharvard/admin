@@ -28,7 +28,7 @@ export const adminDb = getFirestore()
 export function verifyToken(token: string) {
   return new Promise<Data.Token<'server'>>((resolve, reject) => {
     adminDb
-      .collection('tokens')
+      .collection('2024-tokens')
       .doc(token)
       .get()
       .then((tokenDoc) => {

@@ -12,7 +12,7 @@ export const load = (async ({ url, depends }) => {
     const updated = url.searchParams.get('updated')
     const filter = url.searchParams.get('filter')
     try {
-      let dbQuery;
+      let dbQuery
       // if (filter === 'decided') {
       //   dbQuery = updated
       //     ? adminDb
@@ -33,37 +33,34 @@ export const load = (async ({ url, depends }) => {
       if (filter === 'undecided') {
         dbQuery = updated
           ? adminDb
-            .collection('applications')
-            .where('meta.submitted', '==', true)
-            .orderBy('timestamps.updated')
-            .orderBy('meta.decision')
-            .where('meta.decision', '==', null)
-            .startAfter(new Date(updated))
+              .collection('2024-applications')
+              .where('meta.submitted', '==', true)
+              .orderBy('timestamps.updated')
+              .orderBy('meta.decision')
+              .where('meta.decision', '==', null)
+              .startAfter(new Date(updated))
           : adminDb
-            .collection('applications')
-            .where('meta.submitted', '==', true)
-            .orderBy('meta.decision')
-            .where('meta.decision', '==', null)
-            .orderBy('timestamps.updated')
-      }
-      else {
+              .collection('2024-applications')
+              .where('meta.submitted', '==', true)
+              .orderBy('meta.decision')
+              .where('meta.decision', '==', null)
+              .orderBy('timestamps.updated')
+      } else {
         dbQuery = updated
           ? adminDb
-            .collection('applications')
-            .where('meta.submitted', '==', true)
-            .orderBy('timestamps.updated')
-            .startAfter(new Date(updated))
+              .collection('2024-applications')
+              .where('meta.submitted', '==', true)
+              .orderBy('timestamps.updated')
+              .startAfter(new Date(updated))
           : adminDb
-            .collection('applications')
-            .where('meta.submitted', '==', true)
-            .orderBy('timestamps.updated')
+              .collection('2024-applications')
+              .where('meta.submitted', '==', true)
+              .orderBy('timestamps.updated')
       }
-
 
       const snapshot = await dbQuery.limit(25).get()
 
       // const snapshot = await dbQuery.get()
-
 
       const decisions = (
         await Promise.all(

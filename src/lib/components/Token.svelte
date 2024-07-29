@@ -32,7 +32,7 @@
     if (e.detail.error === null) {
       showValidation = false
       disabled = true
-      addDoc(collection(db, 'tokens'), {
+      addDoc(collection(db, '2024-tokens'), {
         role: values.role,
         consumable: values.consumable,
         expires: addHours(new Date(), values.expires),

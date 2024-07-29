@@ -9,7 +9,7 @@
   export let data: PageData
 
   function handleCheckIn() {
-    const hhidRef = doc(db, 'hhids', data.applicant.user.hhid)
+    const hhidRef = doc(db, '2024-hhids', data.applicant.user.hhid)
     updateDoc(hhidRef, {
       checkedIn: true,
       checkedInAt: serverTimestamp(),
@@ -32,7 +32,7 @@
   }
 
   function handleMeal(date: string, meal: string, state: boolean) {
-    updateDoc(doc(db, 'hhids', data.applicant.user.hhid), {
+    updateDoc(doc(db, '2024-hhids', data.applicant.user.hhid), {
       [`food.${date}.${meal}`]: !state,
     }).then(() => {
       invalidateAll()

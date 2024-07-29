@@ -87,7 +87,7 @@ declare global {
         experience: string
         whyHh: string
         project: string
-        predictions: string
+        unlimitedResource: string
         resume: Resume
         resumeShare: boolean
       }

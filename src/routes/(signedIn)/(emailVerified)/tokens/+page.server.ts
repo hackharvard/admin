@@ -6,7 +6,7 @@ export const load = (async ({ depends, locals }) => {
   if (locals.user && locals.user.role === 'admin') {
     depends('app:tokens')
     try {
-      const snapshot = await adminDb.collection('tokens').get()
+      const snapshot = await adminDb.collection('2024-tokens').get()
       return {
         tokens: snapshot.docs.map((doc) => {
           const data = doc.data() as Data.Token<'server'>

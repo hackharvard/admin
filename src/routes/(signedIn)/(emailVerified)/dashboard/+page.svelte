@@ -33,10 +33,10 @@
           timer = window.setTimeout(resolve, 400)
         }),
         new Promise<void>((resolve) => {
-          const applicationsColl = collection(db, 'applications')
-          const usersColl = collection(db, 'users')
-          const confirmationsColl = collection(db, 'confirmations')
-          const hhidsColl = collection(db, 'hhids')
+          const applicationsColl = collection(db, '2024-applications')
+          const usersColl = collection(db, '2024-users')
+          const confirmationsColl = collection(db, '2024-confirmations')
+          const hhidsColl = collection(db, '2024-hhids')
           Promise.all([
             getCountFromServer(applicationsColl),
             getCountFromServer(

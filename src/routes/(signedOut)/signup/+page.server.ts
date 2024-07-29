@@ -65,7 +65,7 @@ export const actions = {
           await adminAuth.setCustomUserClaims(uid, { role })
           try {
             await adminDb
-              .collection('tokens')
+              .collection('2024-tokens')
               .doc(token)
               .update({
                 consumers: FieldValue.arrayUnion(uid),

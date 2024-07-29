@@ -83,7 +83,7 @@
       experience: '',
       whyHh: '',
       project: '',
-      predictions: '',
+      unlimitedResource: '',
       resume: {
         url: '',
         name: '',
@@ -113,7 +113,7 @@
     loading = true
     disabled = true
     values = cloneDeep(defaultValues)
-    getDoc(doc(db, 'applications', id)).then((applicationSnapshot) => {
+    getDoc(doc(db, '2024-applications', id)).then((applicationSnapshot) => {
       const data = applicationSnapshot.data() as Data.Application<'client'>
       if (applicationSnapshot.exists()) {
         values = cloneDeep(data)
@@ -141,12 +141,12 @@
     const frozenId = id
     loading = true
     if (frozenId !== undefined) {
-      setDoc(doc(db, 'decisions', frozenId), {
+      setDoc(doc(db, '2024-decisions', frozenId), {
         type: newDecision,
       })
         .then(() => {
-          updateDoc(doc(db, 'applications', frozenId), {
-            'meta.decision': doc(db, 'decisions', frozenId),
+          updateDoc(doc(db, '2024-applications', frozenId), {
+            'meta.decision': doc(db, '2024-decisions', frozenId),
           })
             .then(() => {
               invalidate('app:applications').then(() => {
@@ -172,7 +172,7 @@
     loading = true
     disabled = true
     if (id !== undefined) {
-      setDoc(doc(db, 'applications', id), values)
+      setDoc(doc(db, '2024-applications', id), values)
         .then(() => {
           invalidate('app:applications').then(() => {
             alert.trigger('success', 'Changes were saved successfully.')
@@ -349,7 +349,7 @@
               class="w-24"
               type="number"
               bind:value={values.personal.age}
-              label="How old will you be on October 20th, 2023?"
+              label="How old will you be on October 18th, 2024?"
               min="0"
               max="100"
               required
@@ -617,8 +617,8 @@
               maxlength={500}
             />
             <Textarea
-              bind:value={values.openResponse.predictions}
-              label={`In line with the theme "Hack to the Future" for HackHarvard 2023, we invite you to unleash your creativity and envision three predictions for the year 2073. Let your imagination soar as you consider how the world may have transformed. Did OpenAI create AGI? Is Taylor Swift’s granddaughter allergic to tree nuts? Does the iPhone 55 have a headphone jack? Are cat videos still funny? Share your captivating predictions with us! (500 char limit)`}
+              bind:value={values.openResponse.unlimitedResource}
+              label={`Imagine you have access to the latest technology and unlimited resources. How would you leverage these tools to solve any societal problem of your choosing? (500 char limit)`}
               required
               maxlength={500}
             />

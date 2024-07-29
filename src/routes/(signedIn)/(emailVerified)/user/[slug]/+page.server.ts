@@ -4,7 +4,7 @@ import { adminDb } from '$lib/server/firebase'
 import type { Timestamp } from 'firebase-admin/firestore'
 
 export const load: PageServerLoad = async ({ params }) => {
-  const hhid = await adminDb.collection('hhids').doc(params.slug).get()
+  const hhid = await adminDb.collection('2024-hhids').doc(params.slug).get()
   if (!hhid.exists) {
     throw error(404, 'Applicant not found.')
   }
@@ -26,11 +26,11 @@ export const load: PageServerLoad = async ({ params }) => {
     }
   }
   const query = await adminDb
-    .collection('users')
+    .collection('2024-users')
     .where('hhid', '==', params.slug)
     .get()
   const confirmedDoc = await adminDb
-    .collection('confirmations')
+    .collection('2024-confirmations')
     .doc(query.docs[0].id)
     .get()
   return {

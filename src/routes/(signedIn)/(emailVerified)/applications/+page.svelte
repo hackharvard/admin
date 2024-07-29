@@ -41,7 +41,7 @@
           meta: { submitted, decision },
           academic: { currentSchool, graduationYear, levelOfStudy },
           hackathon: { firstHackathon, shirtSize },
-          openResponse: { whyHh, project, predictions },
+          openResponse: { whyHh, project, unlimitedResource },
           timestamps: { updated },
         },
       } = application
@@ -62,7 +62,7 @@
         firstHackathon,
         whyHh.replace(/,/g, '').replace(/\n/g, ''),
         project.replace(/,/g, '').replace(/\n/g, ''),
-        predictions.replace(/,/g, '').replace(/\n/g, ''),
+        unlimitedResource.replace(/,/g, '').replace(/\n/g, ''),
         levelOfStudy.replace(/,/g, '').replace(/\n/g, ''),
         updated,
         shirtSize,
@@ -70,7 +70,7 @@
     })
     .join('\n')
   // add column names
-  const csvWithHeaders = `id,submitted,decision,first name,last name,email,gender,age,underrepresented,countryOfResidence,school,gradYear,race,firstHackathon,whyHH,project,predictions,levelOfStudy,updated,shirtSize\n${csv}`
+  const csvWithHeaders = `id,submitted,decision,first name,last name,email,gender,age,underrepresented,countryOfResidence,school,gradYear,race,firstHackathon,whyHH,project,unlimitedResource,levelOfStudy,updated,shirtSize\n${csv}`
 
   const blob = new Blob([csvWithHeaders], { type: 'text/csv' })
   const url = URL.createObjectURL(blob)
@@ -144,12 +144,12 @@
             checked.map((i) => {
               const id = data.applications[i].id
               return new Promise<void>((resolve, reject) => {
-                setDoc(doc(db, 'decisions', id), {
+                setDoc(doc(db, '2024-decisions', id), {
                   type: decision,
                 })
                   .then(() => {
-                    updateDoc(doc(db, 'applications', id), {
-                      'meta.decision': doc(db, 'decisions', id),
+                    updateDoc(doc(db, '2024-applications', id), {
+                      'meta.decision': doc(db, '2024-decisions', id),
                     })
                       .then(resolve)
                       .catch(reject)

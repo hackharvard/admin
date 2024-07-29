@@ -30,7 +30,7 @@
             Promise.all(
               checked.map((i) => {
                 const token = data.tokens[i]
-                return deleteDoc(doc(db, 'tokens', token.id))
+                return deleteDoc(doc(db, '2024-tokens', token.id))
               }),
             )
               .then(() => {
@@ -83,7 +83,7 @@
     id: string
     values: Data.Token<'pojo'>
   }) {
-    deleteDoc(doc(db, 'tokens', token.id))
+    deleteDoc(doc(db, '2024-tokens', token.id))
       .then(() => {
         invalidate('app:tokens').then(() => {
           alert.trigger('success', 'Token deleted.')
