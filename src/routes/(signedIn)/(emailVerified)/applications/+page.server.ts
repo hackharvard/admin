@@ -59,7 +59,26 @@ export const load = (async ({ url, depends }) => {
       }
 
       const snapshot = await dbQuery.limit(25).get()
+      //provide link for the previous page button 
+      let prevDate = "";
+      let pagination = "";
+      if (updated) {
+        const fullDb = adminDb
+              .collection('2024-applications')
+              .where('meta.submitted', '==', true)
+              .orderBy('timestamps.updated')
+        prevDate =""
+        const prevSnapshot = await fullDb.endAt(snapshot.docs[0]).get() //if this line ends up being slow, then get FullDB and enumerate through it each time. 
+        // NOTE: it is -25 due to the fact that currently the last entry in the previous page is the first entry of current page
+        prevDate = prevSnapshot.docs.length-(25) >= 0 ? new Date(prevSnapshot.docs[
+          prevSnapshot.docs.length-(25)].data().timestamps.updated.toDate().toString()
+        ).toString() : '';
+        console.log(prevSnapshot.docs.length-(25))
+        const dbSize = await (await fullDb.count().get()).data().count
+        
+        pagination = `${prevSnapshot.docs.length}-${Math.min(prevSnapshot.docs.length + 24, dbSize)} of ${dbSize}`
 
+      }
       // const snapshot = await dbQuery.get()
 
       const decisions = (
@@ -91,7 +110,9 @@ export const load = (async ({ url, depends }) => {
             },
           }
         }),
-      }
+        prevDate: prevDate,
+        pagination: pagination,
+      } 
     } catch (err) {
       console.log(err)
       throw error(400, 'Something went wrong. Please try again later.')
@@ -126,6 +147,7 @@ export const load = (async ({ url, depends }) => {
       )
       return {
         query,
+
         applications: hits.map((hit, i) => {
           return {
             id: hit.objectID,

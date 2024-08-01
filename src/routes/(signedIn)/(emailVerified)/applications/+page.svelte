@@ -90,10 +90,12 @@
       : current === undefined
       ? undefined
       : data.applications[current]
+  let prevHref = ''
   let nextHref = ''
   let filterRef = ''
   $: {
     const base = $page.url.searchParams
+    
     base.set(
       'updated',
       data.applications[
@@ -101,6 +103,15 @@
       ].values.timestamps.updated.toString(),
     )
     nextHref = `?${base.toString()}`
+    if (data.prevDate !== undefined && data.prevDate !== '') {
+      base.set(
+        'updated',
+        data.prevDate,
+      )
+      prevHref = `?${base.toString()}`
+    } else {
+      prevHref = ''
+    }
   }
   $: {
     const base = $page.url.searchParams
@@ -460,8 +471,13 @@
     {/each}
   </svelte:fragment>
 </Table>
-
+{#if prevHref !== ''}
+<div class="flex justify-start mt-4">
+  <Button href={prevHref}>Previous</Button>
+</div>
+{/if}
 <div class="flex justify-end mt-4">
+  <h4>{data.pagination}</h4>
   <Button href={nextHref}>Next</Button>
 </div>
 
