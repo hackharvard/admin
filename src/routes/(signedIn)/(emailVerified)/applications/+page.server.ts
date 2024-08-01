@@ -57,27 +57,28 @@ export const load = (async ({ url, depends }) => {
               .where('meta.submitted', '==', true)
               .orderBy('timestamps.updated')
       }
-
-      const snapshot = await dbQuery.limit(25).get()
+      
+      const snapshot = await dbQuery.limit(25+1).get()
       //provide link for the previous page button 
       let prevDate = "";
       let pagination = "";
-      if (updated) {
-        const fullDb = adminDb
+      const fullDb = adminDb
               .collection('2024-applications')
               .where('meta.submitted', '==', true)
               .orderBy('timestamps.updated')
-        prevDate =""
-        const prevSnapshot = await fullDb.endAt(snapshot.docs[0]).get() //if this line ends up being slow, then get FullDB and enumerate through it each time. 
-        // NOTE: it is -25 due to the fact that currently the last entry in the previous page is the first entry of current page
-        prevDate = prevSnapshot.docs.length-(25) >= 0 ? new Date(prevSnapshot.docs[
-          prevSnapshot.docs.length-(25)].data().timestamps.updated.toDate().toString()
-        ).toString() : '';
-        console.log(prevSnapshot.docs.length-(25))
-        const dbSize = await (await fullDb.count().get()).data().count
+      if (updated) {
         
+        prevDate =""
+        const prevSnapshot = await fullDb.endAt(snapshot.docs[0]).get() //I tried it and right now this is not slow. if this line ends up being slow, then get FullDB once and enumerate through it each time. 
+        prevDate = prevSnapshot.docs.length-(26) >= 0 ? new Date(
+          prevSnapshot.docs[prevSnapshot.docs.length-(26)].data().timestamps.updated.toDate().toString()
+        ).toString() : '';
+        const dbSize = await (await fullDb.count().get()).data().count
         pagination = `${prevSnapshot.docs.length}-${Math.min(prevSnapshot.docs.length + 24, dbSize)} of ${dbSize}`
 
+      } else {
+        const dbSize = await (await fullDb.count().get()).data().count
+        pagination = `1-25 of ${dbSize}`
       }
       // const snapshot = await dbQuery.get()
 
@@ -92,8 +93,8 @@ export const load = (async ({ url, depends }) => {
       ).map((doc) =>
         doc ? (doc.data() as { type: Data.Decision }).type : null,
       )
-      return {
-        applications: snapshot.docs.map((doc, i) => {
+
+      const applications = snapshot.docs.map((doc, i) => {
           const data = doc.data() as Data.Application<'server'>
           return {
             id: doc.id,
@@ -109,9 +110,12 @@ export const load = (async ({ url, depends }) => {
               },
             },
           }
-        }),
+      })
+      return {
+        applications: snapshot.docs.length == 26? applications.slice(0, -1) : applications,
         prevDate: prevDate,
         pagination: pagination,
+        nextDate: snapshot.docs[snapshot.docs.length - 1].data().timestamps.updated.toDate().toString()
       } 
     } catch (err) {
       console.log(err)

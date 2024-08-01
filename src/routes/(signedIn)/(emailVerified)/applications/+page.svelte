@@ -98,11 +98,12 @@
     
     base.set(
       'updated',
-      data.applications[
-        data.applications.length - 1
-      ].values.timestamps.updated.toString(),
+      data.nextDate ?? '',
+      // data.applications[
+      //   data.applications.length - 1
+      // ].values.timestamps.updated.toString(),
     )
-    nextHref = `?${base.toString()}`
+    nextHref = (data.nextDate !== data.applications[data.applications.length-1].values.timestamps.updated.toString()) ? `?${base.toString()}` : ''
     if (data.prevDate !== undefined && data.prevDate !== '') {
       base.set(
         'updated',
@@ -471,15 +472,16 @@
     {/each}
   </svelte:fragment>
 </Table>
-{#if prevHref !== ''}
-<div class="flex justify-start mt-4">
-  <Button href={prevHref}>Previous</Button>
+<div class="flex justify-between items-center">
+  <div class="flex justify-start mt-4 {prevHref === '' ? 'opacity-0 pointer-events-none' : ''}">
+    <Button href={prevHref}>Previous</Button>
+  </div>
+  <span>{data.pagination}</span>
+  <div class="flex justify-end mt-4 {nextHref === '' ? 'opacity-0 pointer-events-none' : ''}">
+    <Button href={nextHref}>Next</Button>
+  </div>
 </div>
-{/if}
-<div class="flex justify-end mt-4">
-  <h4>{data.pagination}</h4>
-  <Button href={nextHref}>Next</Button>
-</div>
+
 
 <Application bind:dialogEl id={application?.id} />
 
