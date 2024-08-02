@@ -3,12 +3,17 @@ import type { PageServerLoad } from './$types'
 import { adminDb } from '$lib/server/firebase'
 import { ALGOLIA_APP_ID, ALGOLIA_PRIVATE_KEY } from '$env/static/private'
 import algoliasearch from 'algoliasearch'
-import { db } from '$lib/client/firebase'
+
+const APPS_PER_PAGE = 25; // number of applications shown per page
 
 export const load = (async ({ url, depends }) => {
   depends('app:applications')
   const query = url.searchParams.get('query')
-  if (query === null || query === '') {
+
+  let currentPage = parseInt(url.searchParams.get('page') || '1')
+  if (isNaN(currentPage) || currentPage < 1) currentPage = 1 // default to 1
+
+  if (!query) {
     const updated = url.searchParams.get('updated')
     const filter = url.searchParams.get('filter')
     try {
@@ -57,36 +62,32 @@ export const load = (async ({ url, depends }) => {
               .where('meta.submitted', '==', true)
               .orderBy('timestamps.updated')
       }
-      
-      const snapshot = await dbQuery.limit(25+1).get()
-      //provide link for the previous page button 
-      let prevDate = "";
-      let pagination = "";
-      const fullDb = adminDb
-              .collection('2024-applications')
-              .where('meta.submitted', '==', true)
-              .orderBy('timestamps.updated')
-      if (updated) {
-        
-        prevDate =""
-        const prevSnapshot = await fullDb.endAt(snapshot.docs[0]).get() //I tried it and right now this is not slow. if this line ends up being slow, then get FullDB once and enumerate through it each time. 
-        prevDate = prevSnapshot.docs.length-(26) >= 0 ? new Date(
-          prevSnapshot.docs[prevSnapshot.docs.length-(26)].data().timestamps.updated.toDate().toString()
-        ).toString() : '';
-        const dbSize = await (await fullDb.count().get()).data().count
-        pagination = `${prevSnapshot.docs.length}-${Math.min(prevSnapshot.docs.length + 24, dbSize)} of ${dbSize}`
 
-      } else {
-        const dbSize = await (await fullDb.count().get()).data().count
-        pagination = `1-25 of ${dbSize}`
-      }
-      // const snapshot = await dbQuery.get()
+      // Gets entire database (may be slow, any way to optimize?)
+      const totalEntriesSnapshot = 
+        await adminDb
+                .collection('2024-applications')
+                .where('meta.submitted', '==', true).get()
+      const totalEntries = totalEntriesSnapshot.size
+      const totalPages = Math.ceil(totalEntries / APPS_PER_PAGE)
+
+      // Determines which application to start displaying for the current page
+      const startAt = Math.max((currentPage - 1) * APPS_PER_PAGE, 0);
+
+      const snapshotQuery = adminDb
+        .collection('2024-applications')
+        .where('meta.submitted', '==', true)
+        .orderBy('timestamps.updated')
+        .limit(APPS_PER_PAGE)
+        .offset(startAt);
+
+      const snapshot = await snapshotQuery.get();
 
       const decisions = (
         await Promise.all(
           snapshot.docs.map((doc) => {
-            const decision = (doc.data() as Data.Application<'server'>).meta
-              .decision
+            const decision = 
+              (doc.data() as Data.Application<'server'>).meta.decision
             return decision ? decision.get() : null
           }),
         )
@@ -94,7 +95,8 @@ export const load = (async ({ url, depends }) => {
         doc ? (doc.data() as { type: Data.Decision }).type : null,
       )
 
-      const applications = snapshot.docs.map((doc, i) => {
+      return {
+        applications: snapshot.docs.map((doc, i) => {
           const data = doc.data() as Data.Application<'server'>
           return {
             id: doc.id,
@@ -110,13 +112,15 @@ export const load = (async ({ url, depends }) => {
               },
             },
           }
-      })
-      return {
-        applications: snapshot.docs.length == 26? applications.slice(0, -1) : applications,
-        prevDate: prevDate,
-        pagination: pagination,
-        nextDate: snapshot.docs[snapshot.docs.length - 1].data().timestamps.updated.toDate().toString()
-      } 
+        }),
+        pagination: {
+          currentPage,
+          totalPages,
+          entriesBefore: (currentPage - 1) * APPS_PER_PAGE + 1,
+          entriesAfter: Math.min(currentPage * APPS_PER_PAGE, totalEntries),
+          totalEntries
+        }
+      }
     } catch (err) {
       console.log(err)
       throw error(400, 'Something went wrong. Please try again later.')
@@ -149,9 +153,9 @@ export const load = (async ({ url, depends }) => {
       ).map((doc) =>
         doc ? (doc.data() as { type: Data.Decision }).type : null,
       )
+
       return {
         query,
-
         applications: hits.map((hit, i) => {
           return {
             id: hit.objectID,
@@ -169,6 +173,15 @@ export const load = (async ({ url, depends }) => {
             },
           }
         }),
+        // Might need to change this, not sure if it's correct
+        // Needs more testing with the search bar
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          entriesBefore: 1,
+          entriesAfter: hits.length,
+          totalEntries: hits.length,
+        },
       }
     } catch (err) {
       throw error(400, 'The search failed. Please try again later.')

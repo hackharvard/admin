@@ -90,28 +90,27 @@
       : current === undefined
       ? undefined
       : data.applications[current]
-  let prevHref = ''
-  let nextHref = ''
-  let filterRef = ''
+  let prevHref = '', nextHref = '', filterRef = '';
+  let currentPage = data.pagination.currentPage;
+  let totalPages = data.pagination.totalPages;
+  let entriesBefore = data.pagination.entriesBefore;
+  let entriesAfter = data.pagination.entriesAfter;
+  let totalEntries = data.pagination.totalEntries;
   $: {
-    const base = $page.url.searchParams
+    const base = $page.url.searchParams;
     
-    base.set(
-      'updated',
-      data.nextDate ?? '',
-      // data.applications[
-      //   data.applications.length - 1
-      // ].values.timestamps.updated.toString(),
-    )
-    nextHref = (data.nextDate !== data.applications[data.applications.length-1].values.timestamps.updated.toString()) ? `?${base.toString()}` : ''
-    if (data.prevDate !== undefined && data.prevDate !== '') {
-      base.set(
-        'updated',
-        data.prevDate,
-      )
-      prevHref = `?${base.toString()}`
+    if (currentPage < totalPages) {
+      base.set('page', String(currentPage + 1));
+      nextHref = `?${base.toString()}`;
     } else {
-      prevHref = ''
+      nextHref = '';
+    }
+
+    if (currentPage > 1) {
+      base.set('page', String(currentPage - 1));
+      prevHref = `?${base.toString()}`;
+    } else {
+      prevHref = '';
     }
   }
   $: {
@@ -123,6 +122,15 @@
       base.delete('filter')
     }
     filterRef = `?${base.toString()}`
+  }
+
+  // updates url and reloads page with new applications
+  function updatePage(newPage : number) {
+    if (newPage >= 1 && newPage <= totalPages) {
+      const url = new URL(window.location.href); 
+      url.searchParams.set('page', String(newPage));
+      window.location.href = url.toString();
+    }
   }
 
   function createDecisionAction(decision: Data.Decision) {
@@ -186,6 +194,7 @@
         }),
     }
   }
+
   function handleCheck(
     e: Event & { currentTarget: EventTarget & HTMLInputElement },
     i: number,
@@ -197,6 +206,7 @@
       checked = checked.filter((item) => item !== i)
     }
   }
+
   function handleCheckAll(
     e: Event & { currentTarget: EventTarget & HTMLInputElement },
   ) {
@@ -207,6 +217,7 @@
       checked = []
     }
   }
+
   function handleSearch() {
     if (search === '') {
       goto('/applications')
@@ -216,10 +227,18 @@
       goto(`?${base.toString()}`)
     }
   }
+
   async function handleClear() {
     goto('/applications').then(() => {
       search = ''
+      currentPage = 1
     })
+  }
+
+  // used to update results when submitting a specific page change
+  function handleSubmit(event) {
+    const newPage = parseInt(event.target.page.value);
+    updatePage(newPage);
   }
 </script>
 
@@ -472,16 +491,38 @@
     {/each}
   </svelte:fragment>
 </Table>
-<div class="flex justify-between items-center">
-  <div class="flex justify-start mt-4 {prevHref === '' ? 'opacity-0 pointer-events-none' : ''}">
-    <Button href={prevHref}>Previous</Button>
-  </div>
-  <span>{data.pagination}</span>
-  <div class="flex justify-end mt-4 {nextHref === '' ? 'opacity-0 pointer-events-none' : ''}">
-    <Button href={nextHref}>Next</Button>
-  </div>
+
+{#if currentPage > 1}
+<div class="flex justify-start mt-4">
+  <Button on:click={() => updatePage(currentPage - 1)}>Previous</Button>
+</div>
+{/if}
+
+<!-- Known Bugs:
+     - May display incorrect values for entriesBefore-entriesAfter (unknown cause)
+     - Does not reflect change to page 1 when inputting search 
+     - Bad CSS between prev button, page select, and next button (needs to be on same line, but isn't) 
+     - No CSS for input (any way to signify to user that you can change the value? change to dropdown?) -->
+<div class="flex items-center">
+  <span>Page</span>
+  <form on:submit={handleSubmit}>
+    <input
+      type="number"
+      name="page"
+      value={currentPage}
+      min="1"
+      max={totalPages}
+      style="width: 3rem; text-align: center;"
+    />
+  </form>
+  <span>of {totalPages}, entries {entriesBefore}-{entriesAfter} of {totalEntries}</span>
 </div>
 
+{#if currentPage < totalPages}
+<div class="flex justify-end mt-4">
+  <Button on:click={() => updatePage(currentPage + 1)}>Next</Button>
+</div>
+{/if}
 
 <Application bind:dialogEl id={application?.id} />
 
