@@ -505,9 +505,9 @@
 </Table>
 
 <div class="flex justify-between items-center mt-4">
-  {#if currentPage > 1}
-    <Button on:click={() => updatePage(currentPage - 1)}>Previous</Button>
-  {/if}
+
+  <Button class="{currentPage > 1 ? '' : 'opacity-0 pointer-events-none'}" on:click={() => updatePage(currentPage - 1)}>Previous</Button>
+
 
   <div class="flex items-center">
     <span>Page</span>
@@ -524,9 +524,9 @@
     <span>of {totalPages}, entries {entriesBefore}-{entriesAfter} of {totalEntries}</span>
   </div>
 
-  {#if currentPage < totalPages}
-    <Button on:click={() => updatePage(currentPage + 1)}>Next</Button>
-  {/if}
+
+  <Button class="{currentPage < totalPages? '' : 'opacity-0 pointer-events-none '}" on:click={() => updatePage(currentPage + 1)}>Next</Button>
+
 </div>
 
 <Application bind:dialogEl id={application?.id} />
