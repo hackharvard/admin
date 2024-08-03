@@ -234,6 +234,7 @@
       const base = new URLSearchParams(window.location.search);
       base.set('page', '1'); // reset page to 1 when searching
       base.set('query', search);
+      base.delete('filter');
 
       await goto(`?${base.toString()}`) 
     }
@@ -250,6 +251,7 @@
     const newPage = parseInt(event.target.page.value);
     updatePage(newPage);
   }
+
 </script>
 
 <svelte:head>
@@ -502,37 +504,30 @@
   </svelte:fragment>
 </Table>
 
-{#if currentPage > 1}
-<div class="flex justify-start mt-4">
-  <Button on:click={() => updatePage(currentPage - 1)}>Previous</Button>
-</div>
-{/if}
+<div class="flex justify-between items-center mt-4">
+  {#if currentPage > 1}
+    <Button on:click={() => updatePage(currentPage - 1)}>Previous</Button>
+  {/if}
 
-<!-- Known Bugs:
-     - May display incorrect values for entriesBefore-entriesAfter (unknown cause)
-     - Does not reflect change to page 1 when inputting search 
-     - Bad CSS between prev button, page select, and next button (needs to be on same line, but isn't) 
-     - No CSS for input (any way to signify to user that you can change the value? change to dropdown?) -->
-<div class="flex items-center">
-  <span>Page</span>
-  <form on:submit={handlePageChange}>
-    <input
-      type="number"
-      name="page"
-      value={currentPage}
-      min="1"
-      max={totalPages}
-      style="width: 3rem; text-align: center;"
-    />
-  </form>
-  <span>of {totalPages}, entries {entriesBefore}-{entriesAfter} of {totalEntries}</span>
-</div>
+  <div class="flex items-center">
+    <span>Page</span>
+    <form on:submit={handlePageChange}>
+      <input
+        type="number"
+        name="page"
+        value={currentPage}
+        min="1"
+        max={totalPages}
+        style="width: 3rem; text-align: center;"
+      />
+    </form>
+    <span>of {totalPages}, entries {entriesBefore}-{entriesAfter} of {totalEntries}</span>
+  </div>
 
-{#if currentPage < totalPages}
-<div class="flex justify-end mt-4">
-  <Button on:click={() => updatePage(currentPage + 1)}>Next</Button>
+  {#if currentPage < totalPages}
+    <Button on:click={() => updatePage(currentPage + 1)}>Next</Button>
+  {/if}
 </div>
-{/if}
 
 <Application bind:dialogEl id={application?.id} />
 
