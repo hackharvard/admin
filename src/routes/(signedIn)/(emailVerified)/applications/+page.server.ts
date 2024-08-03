@@ -63,7 +63,8 @@ export const load = (async ({ url, depends }) => {
               .orderBy('timestamps.updated')
       }
 
-      // Gets entire database (may be slow, any way to optimize?)
+      // Gets entire database (may be slow to get the entire database just to 
+      // count total entries/pages, any way to optimize?)
       const totalEntriesSnapshot = 
         await adminDb
                 .collection('2024-applications')
@@ -71,7 +72,6 @@ export const load = (async ({ url, depends }) => {
       const totalEntries = totalEntriesSnapshot.size
       const totalPages = Math.ceil(totalEntries / APPS_PER_PAGE)
 
-      // Determines which application to start displaying for the current page
       const startAt = Math.max((currentPage - 1) * APPS_PER_PAGE, 0);
 
       const snapshotQuery = adminDb
@@ -129,6 +129,7 @@ export const load = (async ({ url, depends }) => {
     try {
       const client = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_PRIVATE_KEY)
       const index = client.initIndex('portal_applications')
+
       const { hits } = await index.search<
         Omit<Data.Application<'server'>, 'meta' | 'timestamps'> & {
           meta: {
@@ -142,7 +143,11 @@ export const load = (async ({ url, depends }) => {
             created: Date
           }
         }
-      >(query)
+      >(query, {
+        hitsPerPage: APPS_PER_PAGE, 
+        page: currentPage - 1
+      });
+
       const decisions = (
         await Promise.all(
           hits.map((hit) => {
@@ -153,7 +158,7 @@ export const load = (async ({ url, depends }) => {
       ).map((doc) =>
         doc ? (doc.data() as { type: Data.Decision }).type : null,
       )
-
+      
       return {
         query,
         applications: hits.map((hit, i) => {
@@ -173,8 +178,7 @@ export const load = (async ({ url, depends }) => {
             },
           }
         }),
-        // Might need to change this, not sure if it's correct
-        // Needs more testing with the search bar
+        // Current implementation limits results to 25 entries, no pagination
         pagination: {
           currentPage: 1,
           totalPages: 1,

@@ -96,6 +96,15 @@
   let entriesBefore = data.pagination.entriesBefore;
   let entriesAfter = data.pagination.entriesAfter;
   let totalEntries = data.pagination.totalEntries;
+
+  $: {
+    currentPage = data.pagination.currentPage;
+    totalPages = data.pagination.totalPages;
+    entriesBefore = data.pagination.entriesBefore;
+    entriesAfter = data.pagination.entriesAfter;
+    totalEntries = data.pagination.totalEntries;
+  }
+
   $: {
     const base = $page.url.searchParams;
     
@@ -117,7 +126,7 @@
     const base = $page.url.searchParams
     if (decisionFilter !== 'all') {
       base.set('filter', decisionFilter)
-      base.delete('updated')
+      base.set('page', '1')
     } else {
       base.delete('filter')
     }
@@ -218,13 +227,15 @@
     }
   }
 
-  function handleSearch() {
+  async function handleSearch() {
     if (search === '') {
       goto('/applications')
     } else {
-      const base = $page.url.searchParams
-      base.set('query', search)
-      goto(`?${base.toString()}`)
+      const base = new URLSearchParams(window.location.search);
+      base.set('page', '1'); // reset page to 1 when searching
+      base.set('query', search);
+
+      await goto(`?${base.toString()}`) 
     }
   }
 
@@ -235,8 +246,7 @@
     })
   }
 
-  // used to update results when submitting a specific page change
-  function handleSubmit(event) {
+  function handlePageChange(event) {
     const newPage = parseInt(event.target.page.value);
     updatePage(newPage);
   }
@@ -505,7 +515,7 @@
      - No CSS for input (any way to signify to user that you can change the value? change to dropdown?) -->
 <div class="flex items-center">
   <span>Page</span>
-  <form on:submit={handleSubmit}>
+  <form on:submit={handlePageChange}>
     <input
       type="number"
       name="page"
