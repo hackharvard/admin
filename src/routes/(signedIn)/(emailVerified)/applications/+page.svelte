@@ -96,6 +96,15 @@
   let entriesBefore = data.pagination.entriesBefore;
   let entriesAfter = data.pagination.entriesAfter;
   let totalEntries = data.pagination.totalEntries;
+
+  $: {
+    currentPage = data.pagination.currentPage;
+    totalPages = data.pagination.totalPages;
+    entriesBefore = data.pagination.entriesBefore;
+    entriesAfter = data.pagination.entriesAfter;
+    totalEntries = data.pagination.totalEntries;
+  }
+
   $: {
     const base = $page.url.searchParams;
     
@@ -117,7 +126,7 @@
     const base = $page.url.searchParams
     if (decisionFilter !== 'all') {
       base.set('filter', decisionFilter)
-      base.delete('updated')
+      base.set('page', '1')
     } else {
       base.delete('filter')
     }
@@ -218,13 +227,16 @@
     }
   }
 
-  function handleSearch() {
+  async function handleSearch() {
     if (search === '') {
       goto('/applications')
     } else {
-      const base = $page.url.searchParams
-      base.set('query', search)
-      goto(`?${base.toString()}`)
+      const base = new URLSearchParams(window.location.search);
+      base.set('page', '1'); // reset page to 1 when searching
+      base.set('query', search);
+      base.delete('filter');
+
+      await goto(`?${base.toString()}`) 
     }
   }
 
@@ -235,11 +247,11 @@
     })
   }
 
-  // used to update results when submitting a specific page change
-  function handleSubmit(event) {
+  function handlePageChange(event) {
     const newPage = parseInt(event.target.page.value);
     updatePage(newPage);
   }
+
 </script>
 
 <svelte:head>
@@ -492,37 +504,30 @@
   </svelte:fragment>
 </Table>
 
-{#if currentPage > 1}
-<div class="flex justify-start mt-4">
-  <Button on:click={() => updatePage(currentPage - 1)}>Previous</Button>
-</div>
-{/if}
+<div class="flex justify-between items-center mt-4">
+  {#if currentPage > 1}
+    <Button on:click={() => updatePage(currentPage - 1)}>Previous</Button>
+  {/if}
 
-<!-- Known Bugs:
-     - May display incorrect values for entriesBefore-entriesAfter (unknown cause)
-     - Does not reflect change to page 1 when inputting search 
-     - Bad CSS between prev button, page select, and next button (needs to be on same line, but isn't) 
-     - No CSS for input (any way to signify to user that you can change the value? change to dropdown?) -->
-<div class="flex items-center">
-  <span>Page</span>
-  <form on:submit={handleSubmit}>
-    <input
-      type="number"
-      name="page"
-      value={currentPage}
-      min="1"
-      max={totalPages}
-      style="width: 3rem; text-align: center;"
-    />
-  </form>
-  <span>of {totalPages}, entries {entriesBefore}-{entriesAfter} of {totalEntries}</span>
-</div>
+  <div class="flex items-center">
+    <span>Page</span>
+    <form on:submit={handlePageChange}>
+      <input
+        type="number"
+        name="page"
+        value={currentPage}
+        min="1"
+        max={totalPages}
+        style="width: 3rem; text-align: center;"
+      />
+    </form>
+    <span>of {totalPages}, entries {entriesBefore}-{entriesAfter} of {totalEntries}</span>
+  </div>
 
-{#if currentPage < totalPages}
-<div class="flex justify-end mt-4">
-  <Button on:click={() => updatePage(currentPage + 1)}>Next</Button>
+  {#if currentPage < totalPages}
+    <Button on:click={() => updatePage(currentPage + 1)}>Next</Button>
+  {/if}
 </div>
-{/if}
 
 <Application bind:dialogEl id={application?.id} />
 
