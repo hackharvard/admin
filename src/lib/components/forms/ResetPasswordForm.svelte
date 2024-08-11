@@ -6,6 +6,7 @@
   import Form from '$lib/components/Form.svelte'
   import Link from '$lib/components/Link.svelte'
   import Button from '../Button.svelte'
+  import { user } from '$lib/stores'
 
   let disabled = false
   let showValidation = false
@@ -24,6 +25,7 @@
         body: JSON.stringify({
           type: 'resetPassword',
           email: values.email,
+          firstName: user.firstName,
         }),
       }).then(async (res) => {
         if (res.ok) {
