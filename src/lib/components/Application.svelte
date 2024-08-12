@@ -280,15 +280,15 @@
     <div class="mt-4 flex justify-center">
       <Form class="max-w-2xl">
         <fieldset class="space-y-14" {disabled}>
-          {#if !loading && ((!values.academic.affiliated && values.personal.age < 18) || !values.academic.enrolled || (!values.academic.levelOfStudy
+          {#if !loading && (values.personal.age < 18 || !values.academic.enrolled || (!values.academic.levelOfStudy
                 .toLowerCase()
                 .includes('undergraduate') && !values.academic.levelOfStudy
                   .toLowerCase()
                   .includes('secondary')))}
             <Card class="bg-red-200">
               <b>Please reject this application.</b>
-              {#if !values.academic.affiliated && values.personal.age < 18}
-                Person is not a Harvard student and is under 18.
+              {#if values.personal.age < 18}
+                Person will be under 18.
               {:else if !values.academic.enrolled || (!values.academic.levelOfStudy
                   .toLowerCase()
                   .includes('undergraduate') && !values.academic.levelOfStudy
@@ -349,7 +349,7 @@
               class="w-24"
               type="number"
               bind:value={values.personal.age}
-              label="How old will you be on October 18th, 2024?"
+              label="How old will you be on October 11th, 2024?"
               min="0"
               max="100"
               required
@@ -458,7 +458,7 @@
             <Input
               type="checkbox"
               bind:value={values.academic.enrolled}
-              label="Will you be pursuing an undergraduate degree program at a university on October 20th, 2023?"
+              label="Will you be pursuing an undergraduate degree program at a university on October 11th, 2024?"
               required
             />
             <div class="grid gap-1 sm:grid-cols-3 sm:gap-3">
@@ -528,7 +528,7 @@
             <Input
               type="checkbox"
               bind:value={values.hackathon.ableToAttend}
-              label="HackHarvard is an in-person event. Will you be able to be in Cambridge, MA, United States, considering both the legal requirements for international students and the logistical aspects, on October 20th, 2023?"
+              label="HackHarvard is an in-person event. Will you be able to be in Cambridge, MA, United States, considering both the legal requirements for international students and the logistical aspects, on October 11th, 2024?"
               required
             />
             <Select
