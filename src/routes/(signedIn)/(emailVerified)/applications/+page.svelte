@@ -90,27 +90,56 @@
       : current === undefined
       ? undefined
       : data.applications[current]
-  let nextHref = ''
-  let filterRef = ''
+  let prevHref = '', nextHref = '', filterRef = '';
+  let currentPage = data.pagination.currentPage;
+  let totalPages = data.pagination.totalPages;
+  let entriesBefore = data.pagination.entriesBefore;
+  let entriesAfter = data.pagination.entriesAfter;
+  let totalEntries = data.pagination.totalEntries;
+
   $: {
-    const base = $page.url.searchParams
-    base.set(
-      'updated',
-      data.applications[
-        data.applications.length - 1
-      ].values.timestamps.updated.toString(),
-    )
-    nextHref = `?${base.toString()}`
+    currentPage = data.pagination.currentPage;
+    totalPages = data.pagination.totalPages;
+    entriesBefore = data.pagination.entriesBefore;
+    entriesAfter = data.pagination.entriesAfter;
+    totalEntries = data.pagination.totalEntries;
+  }
+
+  $: {
+    const base = $page.url.searchParams;
+    
+    if (currentPage < totalPages) {
+      base.set('page', String(currentPage + 1));
+      nextHref = `?${base.toString()}`;
+    } else {
+      nextHref = '';
+    }
+
+    if (currentPage > 1) {
+      base.set('page', String(currentPage - 1));
+      prevHref = `?${base.toString()}`;
+    } else {
+      prevHref = '';
+    }
   }
   $: {
     const base = $page.url.searchParams
     if (decisionFilter !== 'all') {
       base.set('filter', decisionFilter)
-      base.delete('updated')
+      base.set('page', '1')
     } else {
       base.delete('filter')
     }
     filterRef = `?${base.toString()}`
+  }
+
+  // updates url and reloads page with new applications
+  function updatePage(newPage : number) {
+    if (newPage >= 1 && newPage <= totalPages) {
+      const url = new URL(window.location.href); 
+      url.searchParams.set('page', String(newPage));
+      window.location.href = url.toString();
+    }
   }
 
   function createDecisionAction(decision: Data.Decision) {
@@ -174,6 +203,7 @@
         }),
     }
   }
+
   function handleCheck(
     e: Event & { currentTarget: EventTarget & HTMLInputElement },
     i: number,
@@ -185,6 +215,7 @@
       checked = checked.filter((item) => item !== i)
     }
   }
+
   function handleCheckAll(
     e: Event & { currentTarget: EventTarget & HTMLInputElement },
   ) {
@@ -195,20 +226,32 @@
       checked = []
     }
   }
-  function handleSearch() {
+
+  async function handleSearch() {
     if (search === '') {
       goto('/applications')
     } else {
-      const base = $page.url.searchParams
-      base.set('query', search)
-      goto(`?${base.toString()}`)
+      const base = new URLSearchParams(window.location.search);
+      base.set('page', '1'); // reset page to 1 when searching
+      base.set('query', search);
+      base.delete('filter');
+
+      await goto(`?${base.toString()}`) 
     }
   }
+
   async function handleClear() {
     goto('/applications').then(() => {
       search = ''
+      currentPage = 1
     })
   }
+
+  function handlePageChange(event) {
+    const newPage = parseInt(event.target.page.value);
+    updatePage(newPage);
+  }
+
 </script>
 
 <svelte:head>
@@ -461,8 +504,29 @@
   </svelte:fragment>
 </Table>
 
-<div class="flex justify-end mt-4">
-  <Button href={nextHref}>Next</Button>
+<div class="flex justify-between items-center mt-4">
+
+  <Button class="{currentPage > 1 ? '' : 'opacity-0 pointer-events-none'}" on:click={() => updatePage(currentPage - 1)}>Previous</Button>
+
+
+  <div class="flex items-center">
+    <span>Page</span>
+    <form on:submit={handlePageChange}>
+      <input
+        type="number"
+        name="page"
+        value={currentPage}
+        min="1"
+        max={totalPages}
+        style="width: 3rem; text-align: center;"
+      />
+    </form>
+    <span>of {totalPages}, entries {entriesBefore}-{entriesAfter} of {totalEntries}</span>
+  </div>
+
+
+  <Button class="{currentPage < totalPages? '' : 'opacity-0 pointer-events-none '}" on:click={() => updatePage(currentPage + 1)}>Next</Button>
+
 </div>
 
 <Application bind:dialogEl id={application?.id} />
