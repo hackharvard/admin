@@ -3,12 +3,17 @@ import type { PageServerLoad } from './$types'
 import { adminDb } from '$lib/server/firebase'
 import { ALGOLIA_APP_ID, ALGOLIA_PRIVATE_KEY } from '$env/static/private'
 import algoliasearch from 'algoliasearch'
-import { db } from '$lib/client/firebase'
+
+const APPS_PER_PAGE = 25 // number of applications shown per page
 
 export const load = (async ({ url, depends }) => {
   depends('app:applications')
   const query = url.searchParams.get('query')
-  if (query === null || query === '') {
+
+  let currentPage = parseInt(url.searchParams.get('page') || '1')
+  if (isNaN(currentPage) || currentPage < 1) currentPage = 1 // default to 1
+
+  if (!query) {
     const updated = url.searchParams.get('updated')
     const filter = url.searchParams.get('filter')
     try {
@@ -58,9 +63,25 @@ export const load = (async ({ url, depends }) => {
               .orderBy('timestamps.updated')
       }
 
-      const snapshot = await dbQuery.limit(25).get()
+      // Gets entire database (may be slow to get the entire database just to
+      // count total entries/pages, any way to optimize?)
+      const totalEntriesSnapshot = await adminDb
+        .collection('2024-applications')
+        .where('meta.submitted', '==', true)
+        .get()
+      const totalEntries = totalEntriesSnapshot.size
+      const totalPages = Math.ceil(totalEntries / APPS_PER_PAGE)
 
-      // const snapshot = await dbQuery.get()
+      const startAt = Math.max((currentPage - 1) * APPS_PER_PAGE, 0)
+
+      const snapshotQuery = adminDb
+        .collection('2024-applications')
+        .where('meta.submitted', '==', true)
+        .orderBy('timestamps.updated')
+        .limit(APPS_PER_PAGE)
+        .offset(startAt)
+
+      const snapshot = await snapshotQuery.get()
 
       const decisions = (
         await Promise.all(
@@ -73,6 +94,7 @@ export const load = (async ({ url, depends }) => {
       ).map((doc) =>
         doc ? (doc.data() as { type: Data.Decision }).type : null,
       )
+
       return {
         applications: snapshot.docs.map((doc, i) => {
           const data = doc.data() as Data.Application<'server'>
@@ -91,6 +113,13 @@ export const load = (async ({ url, depends }) => {
             },
           }
         }),
+        pagination: {
+          currentPage,
+          totalPages,
+          entriesBefore: (currentPage - 1) * APPS_PER_PAGE + 1,
+          entriesAfter: Math.min(currentPage * APPS_PER_PAGE, totalEntries),
+          totalEntries,
+        },
       }
     } catch (err) {
       console.log(err)
@@ -100,6 +129,7 @@ export const load = (async ({ url, depends }) => {
     try {
       const client = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_PRIVATE_KEY)
       const index = client.initIndex('portal_applications_2024')
+
       const { hits } = await index.search<
         Omit<Data.Application<'server'>, 'meta' | 'timestamps'> & {
           meta: {
@@ -113,7 +143,12 @@ export const load = (async ({ url, depends }) => {
             created: Date
           }
         }
-      >(query)
+      >(query, {
+        hitsPerPage: APPS_PER_PAGE,
+        page: currentPage - 1,
+        filters: 'meta.submitted:true',
+      })
+
       const decisions = (
         await Promise.all(
           hits.map((hit) => {
@@ -124,6 +159,7 @@ export const load = (async ({ url, depends }) => {
       ).map((doc) =>
         doc ? (doc.data() as { type: Data.Decision }).type : null,
       )
+
       return {
         query,
         applications: hits.map((hit, i) => {
@@ -143,6 +179,14 @@ export const load = (async ({ url, depends }) => {
             },
           }
         }),
+        // Current implementation limits results to 25 entries, no pagination
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          entriesBefore: 1,
+          entriesAfter: hits.length,
+          totalEntries: hits.length,
+        },
       }
     } catch (err) {
       throw error(400, 'The search failed. Please try again later.')
