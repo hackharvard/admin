@@ -297,7 +297,7 @@
     <Select
       bind:value={decisionFilter}
       label="Filter"
-      options={[{ name: 'all' }, { name: 'undecided' }]}
+      options={[{ name: 'all' }, { name: 'undecided' }, {name: 'at least 18'}, {name: 'under 18'}, {name: 'dietary restrictions'} ]}
       floating
       required
     />

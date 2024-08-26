@@ -9,7 +9,6 @@ const APPS_PER_PAGE = 25 // number of applications shown per page
 export const load = (async ({ url, depends }) => {
   depends('app:applications')
   const query = url.searchParams.get('query')
-
   let currentPage = parseInt(url.searchParams.get('page') || '1')
   if (isNaN(currentPage) || currentPage < 1) currentPage = 1 // default to 1
 
@@ -50,6 +49,52 @@ export const load = (async ({ url, depends }) => {
               .orderBy('meta.decision')
               .where('meta.decision', '==', null)
               .orderBy('timestamps.updated')
+      } else if (filter === 'at least 18') {
+        console.log("filter age");
+        dbQuery = updated
+        ? adminDb
+            .collection('2024-applications')
+            .where('meta.submitted', '==', true)
+            .orderBy('timestamps.updated')
+            .orderBy('personal.age')
+            .where('personal.age', '>=', 18)
+            .startAfter(new Date(updated))
+        : adminDb
+            .collection('2024-applications')
+            .where('meta.submitted', '==', true)
+            .orderBy('timestamps.updated')
+            .orderBy('personal.age')
+            .where('personal.age', '>=', 18)
+      } else if (filter === 'under 18') {
+        dbQuery = updated
+        ? adminDb
+            .collection('2024-applications')
+            .where('meta.submitted', '==', true)
+            .orderBy('timestamps.updated')
+            .orderBy('personal.age')
+            .where('personal.age', '<', 18)
+            .startAfter(new Date(updated))
+        : adminDb
+            .collection('2024-applications')
+            .where('meta.submitted', '==', true)
+            .orderBy('timestamps.updated')
+            .orderBy('personal.age')
+            .where('personal.age', '<', 18)
+      } else if (filter === 'dietary restrictions') {
+        dbQuery = updated
+        ? adminDb
+            .collection('2024-applications')
+            .where('meta.submitted', '==', true)
+            .orderBy('timestamps.updated')
+            .orderBy('meta.decision')
+            .where('personal.dietaryRestrictions', '!=', [])
+            .startAfter(new Date(updated))
+        : adminDb
+            .collection('2024-applications')
+            .where('meta.submitted', '==', true)
+            .orderBy('meta.decision')
+            .where('personal.dietaryRestrictions', '!=', [])
+            .orderBy('timestamps.updated')
       } else {
         dbQuery = updated
           ? adminDb
@@ -65,19 +110,16 @@ export const load = (async ({ url, depends }) => {
 
       // Gets entire database (may be slow to get the entire database just to
       // count total entries/pages, any way to optimize?)
-      const totalEntriesSnapshot = await adminDb
-        .collection('2024-applications')
-        .where('meta.submitted', '==', true)
+      const totalEntriesSnapshot = await dbQuery
         .get()
+
       const totalEntries = totalEntriesSnapshot.size
       const totalPages = Math.ceil(totalEntries / APPS_PER_PAGE)
 
       const startAt = Math.max((currentPage - 1) * APPS_PER_PAGE, 0)
 
-      const snapshotQuery = adminDb
-        .collection('2024-applications')
+      const snapshotQuery = dbQuery
         .where('meta.submitted', '==', true)
-        .orderBy('timestamps.updated')
         .limit(APPS_PER_PAGE)
         .offset(startAt)
 
