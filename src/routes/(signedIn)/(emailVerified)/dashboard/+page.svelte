@@ -15,6 +15,9 @@
       total: number
       submitted: number
       decided: number
+      accepted: number
+      waitlisted: number
+      rejected: number
       confirmed: number
       checkedIn: number
     }
@@ -35,6 +38,7 @@
         new Promise<void>((resolve) => {
           const applicationsColl = collection(db, '2024-applications')
           const usersColl = collection(db, '2024-users')
+          const decisionsColl = collection(db, '2024-decisions')
           const confirmationsColl = collection(db, '2024-confirmations')
           const hhidsColl = collection(db, '2024-hhids')
           Promise.all([
@@ -44,6 +48,15 @@
             ),
             getCountFromServer(
               query(applicationsColl, where('meta.decision', '!=', null)),
+            ),
+            getCountFromServer(
+              query(decisionsColl, where('type', '==', 'accepted')),
+            ),
+            getCountFromServer(
+              query(decisionsColl, where('type', '==', 'waitlisted')),
+            ),
+            getCountFromServer(
+              query(decisionsColl, where('type', '==', 'rejected')),
             ),
             getCountFromServer(usersColl),
             getCountFromServer(
@@ -64,6 +77,9 @@
               totalApplicationsSnapshot,
               submittedApplicationsSnapshot,
               decidedApplicationsSnapshot,
+              acceptedApplicationsSnapshot,
+              waitlistedApllicationsSnapshot,
+              rejectedApplicationsSnapshot,
               totalUsersSnapshot,
               totalConfirmationsSnapshot,
               totalCheckedInSnapshot,
@@ -73,6 +89,10 @@
                   total: totalApplicationsSnapshot.data().count,
                   submitted: submittedApplicationsSnapshot.data().count,
                   decided: decidedApplicationsSnapshot.data().count,
+
+                  accepted: acceptedApplicationsSnapshot.data().count,
+                  waitlisted: waitlistedApllicationsSnapshot.data().count,
+                  rejected: rejectedApplicationsSnapshot.data().count,
                   confirmed: totalConfirmationsSnapshot.data().count,
                   checkedIn: totalCheckedInSnapshot.data().count,
                 },
@@ -137,6 +157,9 @@
             <li>{data.applications.total} total.</li>
             <li>{data.applications.submitted} submitted.</li>
             <li>{data.applications.decided} decided.</li>
+            <li>{data.applications.accepted} accepted.</li>
+            <li>{data.applications.waitlisted} waitlisted.</li>
+            <li>{data.applications.rejected} rejected.</li>
             <li>{data.applications.confirmed} confirmed.</li>
             <li>{data.applications.checkedIn} checked in.</li>
           </ol>
