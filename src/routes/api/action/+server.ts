@@ -29,7 +29,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             action: {
               link,
               name: 'Verify Email',
-              buttonname: 'Confirm Email Change',
+              buttonname: 'Verify Your Email',
               description: `Please verify your email.`,
             },
           }
