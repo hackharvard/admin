@@ -13,7 +13,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const body = await request.json()
     let to
     let data
-    const firstName = body.firstName || 'Hacker' 
+    const firstName = body.firstName || 'Hacker'
     try {
       switch (body.type) {
         case 'verifyEmail': {
@@ -26,12 +26,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
           to = locals.user.email
           data = {
             subject: 'HackHarvard Email Change Requested',
-            firstName: firstName,
             action: {
               link,
-              name: 'Email Change Requested',
+              name: 'Verify Email',
               buttonname: 'Confirm Email Change',
-              description: `We recently received a request to change the email of your HackHarvard account. Please confirm that you want to change your email from ${locals.user.email} to ${body.newEmail} by clicking the button below.`,
+              description: `Please verify your email.`,
             },
           }
           break
@@ -87,7 +86,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
               name: 'Congradulations!',
               buttonname: 'Accept Your Spot',
               description:
-                'Congrats! We are incredibly excited to invite you to participate in this year\'s HackHarvard. From an incredibly competitive application pool, we were impressed by your responses, ideas, and goals. Further logistical information and ways to meet other hackers will be sent to your inboxes soon, so keep an eye out! To officially confirm your spot, please fill out this form in the next three days from receiving this email. We look forward to seeing you soon!',
+                "Congrats! We are incredibly excited to invite you to participate in this year's HackHarvard. From an incredibly competitive application pool, we were impressed by your responses, ideas, and goals. Further logistical information and ways to meet other hackers will be sent to your inboxes soon, so keep an eye out! To officially confirm your spot, please fill out this form in the next three days from receiving this email. We look forward to seeing you soon!",
             },
           }
           break
@@ -101,15 +100,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         data: {
           ...data,
           app: {
-            name: 'Portal',
+            name: 'Admin',
             link: 'https://admin.hackharvard.io',
           },
         },
       }
 
-      // get html template from firebase
-
-      const htmlBody = addDataToHtmlTemplate(actionEmailTemplate, template);
+      const htmlBody = addDataToHtmlTemplate(actionEmailTemplate, template)
 
       const emailData: Data.EmailData = {
         From: 'team@hackharvard.io',
@@ -118,12 +115,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         Subject: String(template.data.subject),
         HTMLBody: htmlBody,
         ReplyTo: 'tech@hackharvard.io',
-        MessageStream: 'outbound'
+        MessageStream: 'outbound',
       }
 
       try {
-        const client = new postmark.ServerClient(POSTMARK_API_TOKEN);
-        await client.sendEmail(emailData);
+        const client = new postmark.ServerClient(POSTMARK_API_TOKEN)
+        await client.sendEmail(emailData)
         return new Response()
       } catch (err) {
         topError = error(400, 'Failed to send email.')
@@ -135,7 +132,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         const typedErr = err as
           | FirebaseError
           | {
-              errorInfo: "FirebaseError"
+              errorInfo: 'FirebaseError'
               codePrefix: string
             }
         if ('errorInfo' in typedErr) {
