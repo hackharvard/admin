@@ -13,31 +13,31 @@
     updateDoc(hhidRef, {
       checkedIn: true,
       checkedInAt: serverTimestamp(),
-      food: {
-        '2023-10-20': {
-          dinner: false,
-        },
-        '2023-10-21': {
-          breakfast: false,
-          lunch: false,
-          dinner: false,
-        },
-        '2023-10-22': {
-          breakfast: false,
-        },
-      },
+      // food: {
+      //   '2023-10-20': {
+      //     dinner: false,
+      //   },
+      //   '2023-10-21': {
+      //     breakfast: false,
+      //     lunch: false,
+      //     dinner: false,
+      //   },
+      //   '2023-10-22': {
+      //     breakfast: false,
+      //   },
+      // },
     }).then(() => {
       invalidateAll()
     })
   }
 
-  function handleMeal(date: string, meal: string, state: boolean) {
-    updateDoc(doc(db, '2024-hhids', data.applicant.user.hhid), {
-      [`food.${date}.${meal}`]: !state,
-    }).then(() => {
-      invalidateAll()
-    })
-  }
+  // function handleMeal(date: string, meal: string, state: boolean) {
+  //   updateDoc(doc(db, '2024-hhids', data.applicant.user.hhid), {
+  //     [`food.${date}.${meal}`]: !state,
+  //   }).then(() => {
+  //     invalidateAll()
+  //   })
+  // }
 </script>
 
 <svelte:head>
