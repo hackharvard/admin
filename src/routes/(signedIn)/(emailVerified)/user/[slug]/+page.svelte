@@ -13,31 +13,31 @@
     updateDoc(hhidRef, {
       checkedIn: true,
       checkedInAt: serverTimestamp(),
-      food: {
-        '2023-10-20': {
-          dinner: false,
-        },
-        '2023-10-21': {
-          breakfast: false,
-          lunch: false,
-          dinner: false,
-        },
-        '2023-10-22': {
-          breakfast: false,
-        },
-      },
+      // food: {
+      //   '2023-10-20': {
+      //     dinner: false,
+      //   },
+      //   '2023-10-21': {
+      //     breakfast: false,
+      //     lunch: false,
+      //     dinner: false,
+      //   },
+      //   '2023-10-22': {
+      //     breakfast: false,
+      //   },
+      // },
     }).then(() => {
       invalidateAll()
     })
   }
 
-  function handleMeal(date: string, meal: string, state: boolean) {
-    updateDoc(doc(db, '2024-hhids', data.applicant.user.hhid), {
-      [`food.${date}.${meal}`]: !state,
-    }).then(() => {
-      invalidateAll()
-    })
-  }
+  // function handleMeal(date: string, meal: string, state: boolean) {
+  //   updateDoc(doc(db, '2024-hhids', data.applicant.user.hhid), {
+  //     [`food.${date}.${meal}`]: !state,
+  //   }).then(() => {
+  //     invalidateAll()
+  //   })
+  // }
 </script>
 
 <svelte:head>
@@ -83,7 +83,7 @@
         <Button on:click={handleCheckIn}>Check In</Button>
       {/if}
     </div>
-    <div class="space-y-8 mt-8">
+    <!-- <div class="space-y-8 mt-8">
       {#if data.applicant.hhid.checkedIn}
         {#each Object.keys(data.applicant.hhid.food).sort() as date}
           <div class="font-bold">
@@ -101,8 +101,13 @@
             </div>
           {/each}
         {/each}
+<<<<<<< Updated upstream
       {/if}
+    </div> -->
+=======
+      {/if} -->
     </div>
+>>>>>>> Stashed changes
   {:else}
     <div>Did not send in a confirmation form.</div>
   {/if}
