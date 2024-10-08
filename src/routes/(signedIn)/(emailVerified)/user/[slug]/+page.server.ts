@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit'
+// import { error } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
 import { adminDb } from '$lib/server/firebase'
 import type { Timestamp } from 'firebase-admin/firestore'
@@ -6,7 +6,7 @@ import type { Timestamp } from 'firebase-admin/firestore'
 export const load: PageServerLoad = async ({ params }) => {
   const hhid = await adminDb.collection('2024-hhids').doc(params.slug).get()
   if (!hhid.exists) {
-    throw error(404, 'Applicant not found.')
+    window.location.href = '/dashboard'
   }
   const hhidData = hhid.data() as {
     checkedIn: boolean

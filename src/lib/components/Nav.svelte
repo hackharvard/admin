@@ -11,6 +11,7 @@
   import { actions } from '$lib/stores'
   import Button from './Button.svelte'
   import progress from '$lib/client/progress'
+  import Form from './Form.svelte'
 
   export let user: Data.User.Peek
 
@@ -40,6 +41,13 @@
   function updateShadow() {
     shadow = window.scrollY !== 0
   }
+
+  let HHID = '';
+  function handleOnSubmit() {
+    if (HHID) {
+      window.location.href = '/user/HH-' + HHID
+    }
+  }
 </script>
 
 <svelte:window on:scroll={updateShadow} />
@@ -65,6 +73,21 @@
               {page.name}
             </a>
           {/each}
+
+          <Form on:submit={handleOnSubmit}>
+            <input
+              type="text"
+              class="rounded-md px-4 py-2 border border-gray-200"
+              placeholder="Check-in HHID #"
+              bind:value={HHID}
+            />
+            <button
+              type="submit"
+              class="rounded-md px-4 py-2 bg-blue-500 text-white"
+            >
+              Go
+            </button>
+          </Form>
         </div>
       {:else}
         <div
