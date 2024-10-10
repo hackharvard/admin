@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit'
+import { redirect } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
 import { adminDb } from '$lib/server/firebase'
 import type { Timestamp } from 'firebase-admin/firestore'
@@ -6,7 +6,7 @@ import type { Timestamp } from 'firebase-admin/firestore'
 export const load: PageServerLoad = async ({ params }) => {
   const hhid = await adminDb.collection('2024-hhids').doc(params.slug).get()
   if (!hhid.exists) {
-    throw error(404, 'Applicant not found.')
+    throw redirect(303, '/notfound');
   }
   const hhidData = hhid.data() as {
     checkedIn: boolean
@@ -33,15 +33,21 @@ export const load: PageServerLoad = async ({ params }) => {
     .collection('2024-confirmations')
     .doc(query.docs[0].id)
     .get()
+  const applications = await adminDb
+  .collection('2024-applications')
+  .where('meta.hhid', '==', params.slug)
+  .get();
+  const shirtSizes = applications.docs.map(doc => doc.data().hackathon.shirtSize);
   return {
     applicant: {
       confirmed: confirmedDoc.exists,
       hhid: {
         checkedIn: hhidData.checkedIn,
-        checkedInAt: (hhidData.checkedInAt as Timestamp)?.toDate(),
+        checkedInAt: hhidData.checkedInAt?.toDate(),
         // food: hhidData.food,
       },
       user: query.docs[0].data(),
+      shirtSizes: shirtSizes,
     },
-  }
+  };
 }
