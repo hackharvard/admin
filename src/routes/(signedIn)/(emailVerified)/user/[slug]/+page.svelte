@@ -86,7 +86,7 @@
         <Button on:click={handleCheckIn}>Check In</Button>
       {/if}
     </div>
-    <div class="space-y-8 mt-8">
+    <!-- <div class="space-y-8 mt-8">
       {#if data.applicant.hhid.checkedIn}
         {#each Object.keys(data.applicant.hhid.food).sort() as date}
           <div class="font-bold">
@@ -105,7 +105,7 @@
           {/each}
         {/each}
       {/if}
-    </div>
+    </div> -->
   {:else}
     <div>Did not send in a confirmation form.</div>
   {/if}

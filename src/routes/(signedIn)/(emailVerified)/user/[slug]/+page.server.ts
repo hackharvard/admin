@@ -11,19 +11,19 @@ export const load: PageServerLoad = async ({ params }) => {
   const hhidData = hhid.data() as {
     checkedIn: boolean
     checkedInAt: Timestamp
-    food: {
-      '2023-10-20': {
-        dinner: boolean
-      }
-      '2023-10-21': {
-        breakfast: boolean
-        lunch: boolean
-        dinner: boolean
-      }
-      '2023-10-22': {
-        breakfast: boolean
-      }
-    }
+    // food: {
+    //   '2023-10-20': {
+    //     dinner: boolean
+    //   }
+    //   '2023-10-21': {
+    //     breakfast: boolean
+    //     lunch: boolean
+    //     dinner: boolean
+    //   }
+    //   '2023-10-22': {
+    //     breakfast: boolean
+    //   }
+    // }
   }
   const query = await adminDb
     .collection('2024-users')
@@ -44,7 +44,7 @@ export const load: PageServerLoad = async ({ params }) => {
       hhid: {
         checkedIn: hhidData.checkedIn,
         checkedInAt: hhidData.checkedInAt?.toDate(),
-        food: hhidData.food,
+        // food: hhidData.food,
       },
       user: query.docs[0].data(),
       shirtSizes: shirtSizes,
