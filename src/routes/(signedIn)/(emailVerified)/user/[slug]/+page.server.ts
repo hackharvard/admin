@@ -33,15 +33,21 @@ export const load: PageServerLoad = async ({ params }) => {
     .collection('2024-confirmations')
     .doc(query.docs[0].id)
     .get()
+  const applications = await adminDb
+  .collection('2024-applications')
+  .where('meta.hhid', '==', params.slug)
+  .get();
+  const shirtSizes = applications.docs.map(doc => doc.data().hackathon.shirtSize);
   return {
     applicant: {
       confirmed: confirmedDoc.exists,
       hhid: {
         checkedIn: hhidData.checkedIn,
-        checkedInAt: (hhidData.checkedInAt as Timestamp)?.toDate(),
+        checkedInAt: hhidData.checkedInAt?.toDate(),
         food: hhidData.food,
       },
       user: query.docs[0].data(),
+      shirtSizes: shirtSizes,
     },
-  }
+  };
 }

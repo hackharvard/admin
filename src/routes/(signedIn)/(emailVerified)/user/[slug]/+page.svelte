@@ -52,6 +52,9 @@
     <div>
       {data.applicant.user.hhid}
     </div>
+    <div>
+      Shirt size: {data.applicant.shirtSizes}
+    </div>
   </div>
   {#if data.applicant.confirmed}
     <div>Confirmation form was submitted.</div>
