@@ -102,11 +102,7 @@
           {/each}
         {/each}
       {/if}
-<<<<<<< Updated upstream
     </div>
-=======
-    </div> -->
->>>>>>> Stashed changes
   {:else}
     <div>Did not send in a confirmation form.</div>
   {/if}
