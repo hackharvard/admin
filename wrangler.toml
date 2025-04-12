@@ -1,0 +1,13 @@
+name = "admin"
+compatibility_date = "2023-09-01"
+node_compat = true
+
+[site]
+bucket = ".svelte-kit/cloudflare"
+
+[build]
+command = "npm run build"
+
+# Controls whether to send the `CF-IPCountry` header
+[vars]
+NODE_VERSION = "18"
