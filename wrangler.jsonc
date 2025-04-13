@@ -8,7 +8,7 @@
 		"enabled": true
 	},
 	"assets": {
-		"binding": "ASSETS",
+		"binding": "STATIC_ASSETS",
 		"directory": ".svelte-kit/cloudflare"
 	},
 	"compatibility_flags": ["nodejs_compat"]
